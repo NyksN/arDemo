@@ -6,120 +6,52 @@
   <title>AR Kalp Anatomisi — 3D Eğitim</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#080510;--surface:rgba(12,8,24,.94);
-      --red:#e63946;--red-d:rgba(230,57,70,.14);
-      --blue:#4895ef;--purple:#9b5de5;--amber:#f4a261;--green:#06d6a0;
-      --text:#f1faee;--muted:rgba(241,250,238,.5);--radius:16px;
-    }
+    :root{--red:#e63946;--red-d:rgba(230,57,70,.14);--blue:#4895ef;--purple:#9b5de5;--amber:#f4a261;--green:#06d6a0;--text:#f1faee;--muted:rgba(241,250,238,.55);--surf:rgba(12,8,24,.92)}
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;height:100dvh}
+    body{overflow:hidden;height:100dvh;font-family:'DM Sans',sans-serif;background:#000;color:var(--text)}
 
-    /* ===== SPLASH ===== */
-    #splash{
-      position:fixed;inset:0;z-index:1000;
-      background:linear-gradient(165deg,#080510,#130d22 45%,#1a0f2e);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      padding:28px;text-align:center;transition:opacity .6s,transform .6s;
-    }
-    #splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+    /* CAMERA BG */
+    #cam-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;display:none}
+
+    /* THREE CANVAS */
+    #c{position:fixed;inset:0;z-index:10;display:none;touch-action:none}
+
+    /* SPLASH */
+    #splash{position:fixed;inset:0;z-index:9000;background:linear-gradient(165deg,#080510,#130d22 45%,#1a0f2e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;transition:opacity .6s}
+    #splash.out{opacity:0;pointer-events:none}
     #splash .ey{font-family:'Outfit';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--red);margin-bottom:12px;opacity:.85}
-    #splash h1{
-      font-family:'Outfit';font-size:30px;font-weight:900;line-height:1.15;margin-bottom:8px;
-      background:linear-gradient(135deg,#f1faee,#e63946);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    }
-    #splash .sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+    #splash h1{font-family:'Outfit';font-size:30px;font-weight:900;line-height:1.15;margin-bottom:8px;background:linear-gradient(135deg,#f1faee,#e63946);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    #splash .sub{font-size:13px;color:var(--muted);margin-bottom:30px;line-height:1.6}
     .steps{width:100%;max-width:330px}
     .stp{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:13px 16px;border-radius:14px;margin-bottom:8px;text-align:left}
     .stp .n{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--red-d);color:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:14px}
     .stp p{font-size:12.5px;line-height:1.5;color:var(--muted)}
-    #go{margin-top:24px;padding:15px 50px;border:none;border-radius:40px;background:linear-gradient(135deg,var(--red),#c1121f);color:#fff;font-family:'Outfit';font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 28px rgba(230,57,70,.4),inset 0 1px 0 rgba(255,255,255,.15)}
+    #go{margin-top:22px;padding:15px 50px;border:none;border-radius:40px;background:linear-gradient(135deg,var(--red),#c1121f);color:#fff;font-family:'Outfit';font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 28px rgba(230,57,70,.4)}
     #go:active{transform:scale(.96)}
     .dl{margin-top:14px;color:var(--blue);font-size:11px;text-decoration:underline;opacity:.7}
 
-    /* ===== HEADER ===== */
-    #hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--surface);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 16px;display:none;align-items:center;gap:12px}
+    /* HEADER */
+    #hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--surf);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 16px;display:none;align-items:center;gap:12px}
     #hdr .ic{width:36px;height:36px;border-radius:11px;background:var(--red-d);display:flex;align-items:center;justify-content:center;font-size:19px}
     #hdr h2{font-family:'Outfit';font-size:14.5px;font-weight:700}
     #hdr small{font-size:10px;color:var(--muted);display:block;margin-top:1px}
 
-    /* ===== AR VIDEO BG ===== */
-    #camera-feed{position:fixed;inset:0;z-index:1;display:none}
-    #camera-feed video{width:100%;height:100%;object-fit:cover}
-
-    /* ===== 3D MODEL CONTAINER ===== */
-    #model-wrap{
-      position:fixed;z-index:50;
-      display:none;align-items:center;justify-content:center;
-      /* Will be positioned dynamically */
-    }
-    #model-wrap.active{display:flex}
-
-    #sketchfab-wrap{
-      width:340px;height:380px;
-      border-radius:20px;overflow:hidden;
-      box-shadow:0 8px 60px rgba(230,57,70,.25),0 0 0 1px rgba(255,255,255,.06);
-      transform-origin:center center;
-      transition:transform .15s ease-out;
-      position:relative;
-      background:#111;
-    }
-    #sketchfab-wrap iframe{
-      width:100%;height:100%;border:none;
-      border-radius:20px;
-    }
-
-    /* Overlay gradient on iframe edges */
-    #model-glow{
-      position:absolute;inset:0;border-radius:20px;pointer-events:none;
-      box-shadow:inset 0 0 40px rgba(230,57,70,.08);
-      border:1.5px solid rgba(230,57,70,.15);
-    }
-
-    /* ===== STATUS ===== */
-    #status{
-      position:fixed;top:66px;left:50%;transform:translateX(-50%);z-index:200;
-      background:var(--surface);backdrop-filter:blur(12px);
-      padding:7px 16px;border-radius:22px;font-size:11px;font-weight:600;
-      display:none;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.06)
-    }
-    #status .led{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:blink 1.4s infinite}
+    /* STATUS */
+    #status{position:fixed;top:66px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surf);backdrop-filter:blur(12px);padding:7px 16px;border-radius:22px;font-size:11px;font-weight:600;display:none;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.06)}
+    #status .led{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:bl 1.4s infinite}
     #status.ok .led{background:var(--green);animation:none}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
 
-    /* ===== HINT ===== */
-    #hint{
-      position:fixed;bottom:105px;left:50%;transform:translateX(-50%);z-index:200;
-      background:var(--surface);backdrop-filter:blur(10px);
-      padding:8px 18px;border-radius:20px;font-size:11px;font-weight:500;
-      display:none;align-items:center;gap:8px;
-      border:1px solid rgba(255,255,255,.06);color:var(--muted);
-      animation:fadeUp .5s ease-out
-    }
-    @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    /* TOOLTIP (on model) */
+    #tooltip{position:fixed;z-index:150;pointer-events:none;opacity:0;transition:opacity .25s;font-family:'Outfit';font-weight:700;font-size:12px;background:var(--surf);backdrop-filter:blur(12px);padding:6px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.1);white-space:nowrap;display:flex;align-items:center;gap:6px}
+    #tooltip.show{opacity:1}
+    #tooltip .td{width:8px;height:8px;border-radius:50%}
 
-    /* ===== BOTTOM NAV ===== */
-    #nav{position:fixed;bottom:10px;left:6px;right:6px;z-index:200;display:none;gap:5px;flex-wrap:wrap;justify-content:center}
-    .nb{
-      padding:8px 12px;border-radius:22px;background:var(--surface);backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:600;
-      cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;
-      transition:all .2s;font-family:'DM Sans'
-    }
-    .nb:active{transform:scale(.93);background:var(--red-d)}
-    .nb .d{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-
-    /* ===== INFO PANEL ===== */
-    #panel{
-      position:fixed;bottom:0;left:0;right:0;z-index:300;
-      background:var(--surface);backdrop-filter:blur(24px);
-      border-top:1.5px solid rgba(230,57,70,.3);border-radius:22px 22px 0 0;
-      transform:translateY(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);
-      max-height:50vh;overflow-y:auto;
-    }
+    /* INFO PANEL */
+    #panel{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surf);backdrop-filter:blur(24px);border-top:1.5px solid rgba(230,57,70,.3);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);max-height:52vh;overflow-y:auto}
     #panel.open{transform:translateY(0)}
     .ph{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;border-bottom:1px solid rgba(255,255,255,.05)}
-    .ph h3{font-family:'Outfit';font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
+    .ph h3{font-family:'Outfit';font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .ph .tag{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
     #pcl{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .pb{padding:12px 18px 24px}
@@ -131,217 +63,487 @@
     .ff{background:linear-gradient(135deg,var(--red-d),rgba(155,93,229,.1));border:1px solid rgba(230,57,70,.15);border-radius:13px;padding:12px 14px;font-size:12px;line-height:1.6}
     .ff b{color:var(--red)}
 
-    /* ===== AR.js scene (hidden, only for marker) ===== */
-    #ar-scene{position:fixed;inset:0;z-index:5;display:none;opacity:0.01}
+    /* HINT */
+    #hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surf);backdrop-filter:blur(10px);padding:8px 18px;border-radius:20px;font-size:11px;font-weight:500;display:none;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.06);color:var(--muted)}
   </style>
 </head>
 <body>
 
-<!-- ===== SPLASH ===== -->
 <div id="splash">
   <div class="ey">Artırılmış Gerçeklik · 3D</div>
   <h1>Kalp Anatomisi<br>Eğitim Uygulaması</h1>
-  <p class="sub">Gerçekçi 3D kalp modelini AR ile<br>keşfedin — döndürün, yakınlaşın, öğrenin</p>
+  <p class="sub">Gerçekçi 3D kalp modelini AR ile keşfedin<br>Bölgelere dokunarak anatomi öğrenin</p>
   <div class="steps">
-    <div class="stp"><div class="n">1</div><p>HIRO marker'ını başka bir ekrandan veya kağıttan hazırlayın</p></div>
-    <div class="stp"><div class="n">2</div><p>Kameranızı marker'a doğrultun — 3D kalp modeli belirecek</p></div>
-    <div class="stp"><div class="n">3</div><p>Modeli iframe içinde döndürün, alt butonlarla bilgi alın</p></div>
+    <div class="stp"><div class="n">1</div><p>Kamera izni verin — arka plan gerçek kamera olacak</p></div>
+    <div class="stp"><div class="n">2</div><p>3D kalp modeli kameranın üzerinde belirecek</p></div>
+    <div class="stp"><div class="n">3</div><p>Parmakla döndürün, yakınlaşın, bölgelere dokunun</p></div>
   </div>
-  <button id="go" onclick="boot()">Başla →</button>
-  <a class="dl" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">📎 HIRO Marker İndir</a>
+  <button id="go" onclick="boot()">Kamerayı Aç & Başla →</button>
 </div>
 
-<!-- ===== HEADER ===== -->
-<div id="hdr">
-  <div class="ic">🫀</div>
-  <div><h2>Kalp Anatomisi AR</h2><small>Marker'a doğrultun · Bölgelere dokunun</small></div>
-</div>
+<video id="cam-video" autoplay playsinline muted></video>
+<canvas id="c"></canvas>
 
-<!-- ===== STATUS ===== -->
-<div id="status"><span class="led"></span><span id="stxt">Marker aranıyor…</span></div>
+<div id="hdr"><div class="ic">🫀</div><div><h2>Kalp Anatomisi AR</h2><small>Döndür · Yakınlaştır · Bölgelere dokun</small></div></div>
+<div id="status"><span class="led"></span><span id="stxt">Kamera başlatılıyor…</span></div>
+<div id="tooltip"><span class="td"></span><span id="ttxt"></span></div>
+<div id="hint">☝️ Parmakla döndür · 🤏 İki parmakla yakınlaş · 👆 Bölgeye dokun = bilgi</div>
 
-<!-- ===== HINT ===== -->
-<div id="hint">👆 3D modeli parmağınızla döndürün · Alt butonlarla bilgi alın</div>
-
-<!-- ===== 3D MODEL ===== -->
-<div id="model-wrap">
-  <div id="sketchfab-wrap">
-    <iframe
-      id="sf-iframe"
-      title="Realistic Human Heart"
-      allow="autoplay; fullscreen; xr-spatial-tracking"
-      allowfullscreen
-      mozallowfullscreen="true"
-      webkitallowfullscreen="true"
-      src=""
-    ></iframe>
-    <div id="model-glow"></div>
-  </div>
-</div>
-
-<!-- ===== BOTTOM NAV ===== -->
-<div id="nav">
-  <button class="nb" onclick="showInfo('aort')"><span class="d" style="background:#e63946"></span>Aort</button>
-  <button class="nb" onclick="showInfo('pulmoner')"><span class="d" style="background:#4895ef"></span>Pulmoner</button>
-  <button class="nb" onclick="showInfo('sol_a')"><span class="d" style="background:#f4a261"></span>Sol Atriyum</button>
-  <button class="nb" onclick="showInfo('sag_a')"><span class="d" style="background:#e9c46a"></span>Sağ Atriyum</button>
-  <button class="nb" onclick="showInfo('sol_v')"><span class="d" style="background:#9b5de5"></span>Sol Ventrikül</button>
-  <button class="nb" onclick="showInfo('sag_v')"><span class="d" style="background:#4895ef"></span>Sağ Ventrikül</button>
-  <button class="nb" onclick="showInfo('koroner')"><span class="d" style="background:#e9c46a"></span>Koroner</button>
-</div>
-
-<!-- ===== INFO PANEL ===== -->
 <div id="panel">
-  <div class="ph">
-    <h3><span id="pi"></span><span id="pt"></span></h3>
-    <button id="pcl" onclick="closePanel()">✕</button>
-  </div>
-  <div class="pb">
-    <div class="row3" id="pstats"></div>
-    <p class="desc" id="pdesc"></p>
-    <div class="ff" id="pfact"></div>
-  </div>
+  <div class="ph"><h3><span id="pi"></span><span id="pt"></span></h3><button id="pcl" onclick="closePanel()">✕</button></div>
+  <div class="pb"><div class="row3" id="pstats"></div><p class="desc" id="pdesc"></p><div class="ff" id="pfact"></div></div>
 </div>
 
-<!-- ===== AR.JS (only for marker detection) ===== -->
-<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// =============================================
-// ANATOMY DATA
-// =============================================
-const DATA={
-  aort:{i:'🔴',t:'Aort Damarı (Aorta)',tag:'Ana Arter',tc:'#e63946',
+// ===== DATA =====
+const D={
+  aort:{i:'🔴',t:'Aort Damarı',tag:'Ana Arter',tc:'#e63946',
     s:[{v:'2.5 cm',l:'Çap'},{v:'30-40 cm',l:'Uzunluk'},{v:'5 L/dk',l:'Kan Akışı'}],
-    d:'Aort, vücudumuzun en büyük atardamarıdır. Sol ventrikülden çıkarak yukarı doğru kıvrılır (aort yayı) ve tüm vücuda oksijenli kan taşır. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur.',
-    f:'<b>💡 Biliyor muydun?</b> Aort o kadar güçlüdür ki, kalp her attığında içinden geçen kan 1 metre yüksekliğe fışkırabilir! Duvarları yaklaşık 2mm kalınlığında elastik dokudan oluşur.'},
+    d:'Aort, vücudumuzun en büyük atardamarıdır. Sol ventrikülden çıkarak yukarı doğru kıvrılır ve tüm vücuda oksijenli kan taşır. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur. Aort kapağı kanın geri akmasını engeller.',
+    f:'<b>💡 Biliyor muydun?</b> Kalp her attığında aorttan geçen kan 1 metre yüksekliğe fışkırabilir! Duvarları ~2mm kalınlığında elastik dokudan oluşur.'},
   pulmoner:{i:'🔵',t:'Pulmoner Arter',tag:'Akciğer Arteri',tc:'#4895ef',
     s:[{v:'2 cm',l:'Çap'},{v:'~5 cm',l:'Uzunluk'},{v:'25 mmHg',l:'Basınç'}],
-    d:'Pulmoner arter, sağ ventrikülden çıkarak oksijeni azalmış kanı akciğerlere taşıyan damardır. Vücuttaki tek oksijensiz kan taşıyan arterdir. Akciğerlerde sağ ve sol dallara ayrılır.',
-    f:'<b>💡 Biliyor muydun?</b> Pulmoner arter, vücuttaki tek "mavi kan" taşıyan arterdir! Diğer tüm arterler oksijenli kan taşırken, bu arter tam tersini yapar.'},
-  sol_a:{i:'🟡',t:'Sol Atriyum',tag:'Üst Sol Odacık',tc:'#f4a261',
+    d:'Sağ ventrikülden çıkarak oksijensiz kanı akciğerlere taşır. Vücuttaki tek oksijensiz kan taşıyan arterdir. Akciğerlerde sağ ve sol dallara ayrılır.',
+    f:'<b>💡 Biliyor muydun?</b> Pulmoner arter vücuttaki tek "mavi kan" taşıyan arterdir! Diğer arterler oksijenli kan taşırken bu tam tersini yapar.'},
+  sol_atriyum:{i:'🟡',t:'Sol Atriyum',tag:'Üst Sol Odacık',tc:'#f4a261',
     s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'4 Ven',l:'Bağlantı'}],
-    d:'Sol atriyum, akciğerlerden gelen oksijenli kanı 4 pulmoner ven aracılığıyla toplar. Mitral kapak aracılığıyla kanı sol ventriküle aktarır. Kalbin arka-sol üst kısmında yer alır.',
-    f:'<b>💡 Biliyor muydun?</b> Sol atriyumda oluşan düzensiz sinyaller "atriyal fibrilasyon" denilen en yaygın kalp ritim bozukluğuna neden olur. Dünya nüfusunun %2-4\'ü etkilenir.'},
-  sag_a:{i:'🟠',t:'Sağ Atriyum',tag:'Üst Sağ Odacık',tc:'#e9c46a',
+    d:'Akciğerlerden gelen oksijenli kanı 4 pulmoner ven aracılığıyla toplar. Mitral kapak ile kanı sol ventriküle aktarır. Kalbin arka-sol üst kısmında yer alır.',
+    f:'<b>💡 Biliyor muydun?</b> Burada oluşan düzensiz sinyaller "atriyal fibrilasyon" denilen en yaygın ritim bozukluğuna neden olur.'},
+  sag_atriyum:{i:'🟠',t:'Sağ Atriyum',tag:'Üst Sağ Odacık',tc:'#e9c46a',
     s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'SA Düğüm',l:'Kalp Pili'}],
-    d:'Sağ atriyum, vücuttan dönen oksijensiz kanı üst ve alt vena kava aracılığıyla toplar. Kalbin doğal pili olan SA düğüm burada bulunur ve dakikada 60-100 elektrik sinyali üretir.',
-    f:'<b>💡 Biliyor muydun?</b> SA düğüm sağ atriyumda yer alır. Bu küçük hücre grubu vücudunuzun doğal pili gibi çalışarak kalbinizi çalıştırır!'},
-  sol_v:{i:'🟣',t:'Sol Ventrikül',tag:'Alt Sol Odacık',tc:'#9b5de5',
+    d:'Vücuttan dönen oksijensiz kanı vena kavalar aracılığıyla toplar. Kalbin doğal pili olan SA düğüm burada bulunur ve dakikada 60-100 sinyal üretir.',
+    f:'<b>💡 Biliyor muydun?</b> SA düğüm vücudunuzun doğal pilidir — bu küçücük hücre grubu kalbinizi ömür boyu çalıştırır!'},
+  sol_ventrikul:{i:'🟣',t:'Sol Ventrikül',tag:'Alt Sol Odacık',tc:'#9b5de5',
     s:[{v:'120 mL',l:'Hacim'},{v:'120 mmHg',l:'Basınç'},{v:'12-15 mm',l:'Duvar'}],
-    d:'Sol ventrikül, kalbin en güçlü ve en kalın duvarlı odacığıdır. Oksijenli kanı aort aracılığıyla tüm vücuda pompalar. Duvarları sağ ventriküle göre 3 kat daha kalındır.',
-    f:'<b>💡 Biliyor muydun?</b> Sol ventrikül günde yaklaşık 7.500 litre kan pompalar — olimpik bir yüzme havuzunu 7 günde doldurabilecek miktardır!'},
-  sag_v:{i:'🔵',t:'Sağ Ventrikül',tag:'Alt Sağ Odacık',tc:'#4895ef',
+    d:'Kalbin en güçlü odacığıdır. Oksijenli kanı aort ile tüm vücuda pompalar. Duvarları sağ ventriküle göre 3 kat kalındır çünkü kanı ayak ucuna kadar ulaştırır.',
+    f:'<b>💡 Biliyor muydun?</b> Günde ~7.500 litre kan pompalar — olimpik havuzu 7 günde doldurur!'},
+  sag_ventrikul:{i:'🔵',t:'Sağ Ventrikül',tag:'Alt Sağ Odacık',tc:'#4895ef',
     s:[{v:'85 mL',l:'Hacim'},{v:'25 mmHg',l:'Basınç'},{v:'3-5 mm',l:'Duvar'}],
-    d:'Sağ ventrikül, oksijeni azalmış kanı pulmoner arter yoluyla akciğerlere pompalar. Sol ventriküle göre daha ince duvarlıdır çünkü akciğerler yakındır ve düşük basınç yeterlidir.',
-    f:'<b>💡 Biliyor muydun?</b> Sağ ventrikül, sol ventriküle göre 6 kat az basınçla çalışır ama aynı miktarda kan pompalar!'},
+    d:'Oksijensiz kanı pulmoner arter ile akciğerlere pompalar. Sol ventriküle göre ince duvarlıdır çünkü akciğerler yakındır.',
+    f:'<b>💡 Biliyor muydun?</b> Sol ventriküle göre 6 kat az basınçla çalışır ama aynı miktarda kan pompalar!'},
   koroner:{i:'💛',t:'Koroner Arterler',tag:'Kalbi Besleyen Damarlar',tc:'#e9c46a',
-    s:[{v:'2-4 mm',l:'Çap'},{v:'%5',l:'Debi Payı'},{v:'2 Ana',l:'Dal'}],
-    d:'Koroner arterler, kalp kasının kendisini besleyen damarlardır. Aortun hemen çıkışından dallanırlar ve kalbi taç gibi sararlar — "koroner" Latince "taç" anlamına gelir.',
-    f:'<b>💡 Biliyor muydun?</b> Bu damarlar sadece 2-4mm çapında olmasına rağmen kalbin tüm oksijen ihtiyacını karşılar. Tıkanmaları kalp krizine yol açar!'}
+    s:[{v:'2-4 mm',l:'Çap'},{v:'%5',l:'Debi Payı'},{v:'2 Ana Dal',l:'Sağ & Sol'}],
+    d:'Kalp kasını besleyen damarlardır. Aortun çıkışından dallanarak kalbi taç gibi sararlar. "Koroner" Latince "taç" demektir.',
+    f:'<b>💡 Biliyor muydun?</b> Sadece 2-4mm çapında ama kalbin tüm oksijenini karşılar. Tıkanması = kalp krizi!'}
 };
 
-// =============================================
-// SKETCHFAB EMBED URL (Gerçekçi kalp modeli)
-// =============================================
-const SKETCHFAB_URL = 'https://sketchfab.com/models/3f8072336ce94d18b3d0d055a1ece089/embed?autospin=0.15&autostart=1&transparent=1&ui_animations=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_watermark_link=0&ui_watermark=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&dnt=1&ui_hint=2&ui_controls=1&camera=0';
+// ===== GLOBALS =====
+let scene,camera,renderer,heartGroup,raycaster,mouse;
+let rotX=-0.3,rotY=0,tRotX=-0.3,tRotY=0,zoom=1,tZoom=1;
+let dragging=false,lx=0,ly=0,ldist=0,hbPhase=0;
+let partMeshes={}; // name -> mesh array
+let hoveredPart=null;
+const canvas=document.getElementById('c');
+const tooltip=document.getElementById('tooltip');
 
-// =============================================
-// BOOT
-// =============================================
-let arScene, markerEl;
-let markerVisible = false;
-
-function boot(){
-  document.getElementById('splash').classList.add('out');
-  document.getElementById('hdr').style.display='flex';
-  document.getElementById('status').style.display='flex';
-  setTimeout(()=>{document.getElementById('splash').style.display='none'},700);
-
-  // Create AR scene dynamically
-  createARScene();
+// ===== CAMERA =====
+async function startCamera(){
+  const v=document.getElementById('cam-video');
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    v.srcObject=stream;v.style.display='block';
+    document.getElementById('stxt').textContent='✅ Kamera aktif — 3D Kalp yüklendi!';
+    document.getElementById('status').classList.add('ok');
+  }catch(e){
+    // Kamera yoksa siyah arka plan, yine de çalışsın
+    document.getElementById('stxt').textContent='⚠️ Kamera yok — model yine de kullanılabilir';
+  }
 }
 
-function createARScene(){
-  const sceneEl = document.createElement('a-scene');
-  sceneEl.id = 'ar-scene';
-  sceneEl.setAttribute('embedded','');
-  sceneEl.setAttribute('arjs','sourceType:webcam; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3;');
-  sceneEl.setAttribute('vr-mode-ui','enabled:false');
-  sceneEl.setAttribute('renderer','alpha:true; antialias:true');
-  sceneEl.style.cssText='position:fixed;inset:0;z-index:5;';
+// ===== THREE.JS SETUP =====
+function initThree(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.set(0,0,5);
 
-  const marker = document.createElement('a-marker');
-  marker.id='hm';
-  marker.setAttribute('preset','hiro');
-  sceneEl.appendChild(marker);
+  renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(0x000000,0); // TRANSPARENT!
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.3;
 
-  const cam = document.createElement('a-entity');
-  cam.setAttribute('camera','');
-  sceneEl.appendChild(cam);
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffc8c8,0.6));
+  const k=new THREE.DirectionalLight(0xffffff,1.3);k.position.set(3,5,5);scene.add(k);
+  const f=new THREE.DirectionalLight(0xff8888,0.5);f.position.set(-4,1,3);scene.add(f);
+  const r=new THREE.DirectionalLight(0xff4444,0.5);r.position.set(0,-3,-4);scene.add(r);
+  const p=new THREE.PointLight(0xff3333,0.4,10);p.position.set(0,0,3);scene.add(p);
 
-  document.body.appendChild(sceneEl);
+  raycaster=new THREE.Raycaster();
+  mouse=new THREE.Vector2();
 
-  // Wait for scene to load, then attach marker events
-  sceneEl.addEventListener('loaded', ()=>{
-    const m = document.getElementById('hm');
-    if(m){
-      m.addEventListener('markerFound', onMarkerFound);
-      m.addEventListener('markerLost', onMarkerLost);
+  heartGroup=new THREE.Group();
+  scene.add(heartGroup);
+  buildHeart();
+
+  canvas.style.display='block';
+  animate();
+}
+
+// ===== MATERIALS =====
+function mat(color,r,m,cc){
+  return new THREE.MeshPhysicalMaterial({color,roughness:r||.5,metalness:m||.08,clearcoat:cc||.3,clearcoatRoughness:.4});
+}
+
+// ===== BUILD HEART =====
+function buildHeart(){
+  const bodyL=mat(0xb91c1c,.5,.08,.3);
+  const bodyR=mat(0x8b1a1a,.55,.06,.25);
+  const darkBody=mat(0x6b1515,.6,.04,.2);
+  const artMat=mat(0xef4444,.35,.15,.5);
+  const veinMat=mat(0x3b82f6,.4,.12,.4);
+  const veinDark=mat(0x1e40af,.45,.1,.35);
+  const corMat=mat(0xfbbf24,.3,.2,.6);
+  const grooveMat=mat(0x3d0c0c,.7,.02,.1);
+  const valveMat=mat(0xffb4b4,.5,.05,.2);
+
+  // Helper
+  function tube(pts,radius,material,segs){
+    const c=new THREE.CatmullRomCurve3(pts);
+    const g=new THREE.TubeGeometry(c,segs||30,radius,12,false);
+    return new THREE.Mesh(g,material);
+  }
+  function addPart(name,mesh){
+    heartGroup.add(mesh);
+    mesh.userData.part=name;
+    if(!partMeshes[name])partMeshes[name]=[];
+    partMeshes[name].push(mesh);
+  }
+
+  // ===== SOL VENTRİKÜL (büyük, kalın) =====
+  const lvGeo=new THREE.SphereGeometry(1,48,48);
+  lvGeo.scale(0.78,1.15,0.72);
+  const lv=new THREE.Mesh(lvGeo,bodyL);
+  lv.position.set(-0.12,-0.12,0);
+  addPart('sol_ventrikul',lv);
+
+  // Sol ventrikül yüzey detayı
+  const lvd=new THREE.SphereGeometry(0.97,32,32);
+  lvd.scale(0.72,1.08,0.74);
+  const lvDetail=new THREE.Mesh(lvd,mat(0xd42f2f,.45,.1,.35));
+  lvDetail.position.set(-0.15,-0.05,0.08);
+  addPart('sol_ventrikul',lvDetail);
+
+  // ===== SAĞ VENTRİKÜL =====
+  const rvGeo=new THREE.SphereGeometry(0.88,44,44);
+  rvGeo.scale(0.68,1.0,0.66);
+  const rv=new THREE.Mesh(rvGeo,bodyR);
+  rv.position.set(0.38,-0.08,0.14);
+  addPart('sag_ventrikul',rv);
+
+  const rvd=new THREE.SphereGeometry(0.75,28,28);
+  rvd.scale(0.55,0.85,0.6);
+  const rvDetail=new THREE.Mesh(rvd,mat(0x991b1b,.5,.06,.2));
+  rvDetail.position.set(0.42,-0.02,0.22);
+  addPart('sag_ventrikul',rvDetail);
+
+  // ===== SOL ATRİYUM =====
+  const laGeo=new THREE.SphereGeometry(0.52,36,36);
+  laGeo.scale(0.72,0.58,0.62);
+  const la=new THREE.Mesh(laGeo,mat(0xa91c1c,.48,.08,.3));
+  la.position.set(-0.28,0.88,-0.05);
+  addPart('sol_atriyum',la);
+
+  const laEar=new THREE.SphereGeometry(0.22,20,20);
+  laEar.scale(1.2,0.8,0.7);
+  const laE=new THREE.Mesh(laEar,mat(0xc0392b,.45,.1,.35));
+  laE.position.set(-0.6,0.95,0.15);
+  addPart('sol_atriyum',laE);
+
+  // ===== SAĞ ATRİYUM =====
+  const raGeo=new THREE.SphereGeometry(0.52,36,36);
+  raGeo.scale(0.68,0.58,0.62);
+  const ra=new THREE.Mesh(raGeo,mat(0x7f1d1d,.5,.06,.25));
+  ra.position.set(0.42,0.82,0.06);
+  addPart('sag_atriyum',ra);
+
+  const raEar=new THREE.SphereGeometry(0.2,20,20);
+  raEar.scale(1.1,0.75,0.7);
+  const raE=new THREE.Mesh(raEar,mat(0x991b1b,.48,.08,.3));
+  raE.position.set(0.72,0.88,0.2);
+  addPart('sag_atriyum',raE);
+
+  // ===== APEX =====
+  const apGeo=new THREE.ConeGeometry(0.48,0.75,32);
+  const ap=new THREE.Mesh(apGeo,bodyL);
+  ap.position.set(0.08,-1.18,0);ap.rotation.z=0.15;
+  addPart('sol_ventrikul',ap);
+
+  // ===== AORT (ana kırmızı damar) =====
+  const aorta=tube([
+    new THREE.Vector3(-0.02,0.82,0),
+    new THREE.Vector3(-0.02,1.2,0),
+    new THREE.Vector3(0.08,1.55,-0.05),
+    new THREE.Vector3(0.3,1.78,-0.12),
+    new THREE.Vector3(0.58,1.8,-0.16),
+    new THREE.Vector3(0.82,1.6,-0.2),
+    new THREE.Vector3(0.88,1.2,-0.25),
+    new THREE.Vector3(0.85,0.8,-0.3),
+  ],0.14,artMat,50);
+  addPart('aort',aorta);
+
+  // Aort iç parlama
+  const aortaInner=tube([
+    new THREE.Vector3(0,0.85,0),
+    new THREE.Vector3(0,1.22,0),
+    new THREE.Vector3(0.1,1.52,-0.04),
+    new THREE.Vector3(0.28,1.72,-0.1),
+  ],0.06,mat(0xff9999,.3,.05,.6),24);
+  addPart('aort',aortaInner);
+
+  // Aort dalları
+  [[new THREE.Vector3(0.18,1.72,-0.08),new THREE.Vector3(0.18,2.15,-0.02)],
+   [new THREE.Vector3(0.38,1.79,-0.1),new THREE.Vector3(0.42,2.18,-0.05)],
+   [new THREE.Vector3(0.58,1.78,-0.14),new THREE.Vector3(0.68,2.08,-0.08)]
+  ].forEach((pts,i)=>{
+    const b=tube(pts,0.05-i*0.005,artMat,14);
+    addPart('aort',b);
+  });
+
+  // ===== PULMONER ARTER =====
+  const pulm=tube([
+    new THREE.Vector3(0.18,0.78,0.18),
+    new THREE.Vector3(-0.05,1.1,0.28),
+    new THREE.Vector3(-0.35,1.35,0.24),
+    new THREE.Vector3(-0.65,1.42,0.18),
+    new THREE.Vector3(-0.85,1.38,0.12),
+  ],0.11,veinMat,40);
+  addPart('pulmoner',pulm);
+
+  // Pulmoner dallar
+  addPart('pulmoner',tube([new THREE.Vector3(-0.65,1.4,0.17),new THREE.Vector3(-0.88,1.65,0.08)],0.055,veinMat,12));
+  addPart('pulmoner',tube([new THREE.Vector3(-0.7,1.38,0.16),new THREE.Vector3(-0.75,1.7,0.28)],0.05,veinMat,12));
+
+  // ===== VENA KAVA SUPERİOR =====
+  const svc=tube([
+    new THREE.Vector3(0.52,0.88,0),
+    new THREE.Vector3(0.62,1.3,-0.05),
+    new THREE.Vector3(0.58,1.85,-0.1),
+  ],0.09,veinDark,24);
+  addPart('sag_atriyum',svc);
+
+  // ===== VENA KAVA İNFERİOR =====
+  const ivc=tube([
+    new THREE.Vector3(0.52,0.62,0.05),
+    new THREE.Vector3(0.62,0.1,0.1),
+    new THREE.Vector3(0.58,-0.45,0.15),
+  ],0.085,veinDark,24);
+  addPart('sag_atriyum',ivc);
+
+  // ===== PULMONER VENLER =====
+  [[new THREE.Vector3(-0.38,0.92,-0.3),new THREE.Vector3(-0.78,1.22,-0.52)],
+   [new THREE.Vector3(-0.32,0.82,-0.35),new THREE.Vector3(-0.82,0.92,-0.62)],
+   [new THREE.Vector3(-0.42,0.98,-0.2),new THREE.Vector3(-0.9,1.3,-0.35)],
+   [new THREE.Vector3(-0.35,0.78,-0.25),new THREE.Vector3(-0.85,0.7,-0.48)],
+  ].forEach(pts=>{
+    const pv=tube(pts,0.04,mat(0x9b59b6,.45,.08,.35),12);
+    addPart('sol_atriyum',pv);
+  });
+
+  // ===== KORONER ARTERLER =====
+  const cor1=tube([
+    new THREE.Vector3(-0.02,0.62,0.58),
+    new THREE.Vector3(-0.25,0.25,0.65),
+    new THREE.Vector3(-0.38,-0.15,0.55),
+    new THREE.Vector3(-0.3,-0.6,0.42),
+    new THREE.Vector3(-0.2,-0.9,0.3),
+  ],0.03,corMat,36);
+  addPart('koroner',cor1);
+
+  const cor2=tube([
+    new THREE.Vector3(0.12,0.62,0.55),
+    new THREE.Vector3(0.38,0.25,0.58),
+    new THREE.Vector3(0.45,-0.15,0.48),
+    new THREE.Vector3(0.38,-0.55,0.35),
+    new THREE.Vector3(0.28,-0.85,0.25),
+  ],0.028,corMat,36);
+  addPart('koroner',cor2);
+
+  // Koroner dallar
+  addPart('koroner',tube([new THREE.Vector3(-0.22,0.2,0.62),new THREE.Vector3(-0.5,0.05,0.52)],0.016,corMat,10));
+  addPart('koroner',tube([new THREE.Vector3(-0.35,-0.1,0.53),new THREE.Vector3(-0.55,-0.25,0.42)],0.014,corMat,10));
+  addPart('koroner',tube([new THREE.Vector3(0.36,0.18,0.56),new THREE.Vector3(0.58,0.02,0.45)],0.016,corMat,10));
+  addPart('koroner',tube([new THREE.Vector3(0.42,-0.1,0.46),new THREE.Vector3(0.6,-0.28,0.36)],0.014,corMat,10));
+  // circumflex
+  addPart('koroner',tube([
+    new THREE.Vector3(-0.05,0.58,0.56),
+    new THREE.Vector3(-0.45,0.52,0.48),
+    new THREE.Vector3(-0.65,0.35,0.3),
+    new THREE.Vector3(-0.6,0.05,0.15),
+  ],0.022,corMat,24));
+
+  // ===== AV OLUK =====
+  const groove=tube([
+    new THREE.Vector3(-0.62,0.48,0.3),
+    new THREE.Vector3(-0.1,0.52,0.62),
+    new THREE.Vector3(0.5,0.48,0.48),
+    new THREE.Vector3(0.72,0.42,0),
+    new THREE.Vector3(0.5,0.48,-0.42),
+    new THREE.Vector3(-0.1,0.52,-0.52),
+    new THREE.Vector3(-0.62,0.48,-0.22),
+    new THREE.Vector3(-0.72,0.48,0.1),
+    new THREE.Vector3(-0.62,0.48,0.3),
+  ],0.028,grooveMat,56);
+  heartGroup.add(groove);
+
+  // ===== KAPAKLAR =====
+  // Mitral
+  const mGeo=new THREE.TorusGeometry(0.18,0.035,12,24);
+  const mitral=new THREE.Mesh(mGeo,valveMat);
+  mitral.position.set(-0.2,0.5,0.25);mitral.rotation.x=Math.PI/2*0.9;
+  heartGroup.add(mitral);
+  // Triküspit
+  const tGeo=new THREE.TorusGeometry(0.16,0.03,12,24);
+  const tri=new THREE.Mesh(tGeo,valveMat);
+  tri.position.set(0.3,0.48,0.3);tri.rotation.x=Math.PI/2*0.85;
+  heartGroup.add(tri);
+  // Aort kapağı
+  const akGeo=new THREE.TorusGeometry(0.1,0.025,10,20);
+  const ak=new THREE.Mesh(akGeo,valveMat);
+  ak.position.set(-0.01,0.78,0.05);ak.rotation.x=0.3;
+  heartGroup.add(ak);
+  // Pulmoner kapak
+  const pkGeo=new THREE.TorusGeometry(0.08,0.022,10,20);
+  const pk=new THREE.Mesh(pkGeo,valveMat);
+  pk.position.set(0.15,0.76,0.2);pk.rotation.x=0.5;
+  heartGroup.add(pk);
+
+  // Septum
+  const sept=tube([
+    new THREE.Vector3(0.1,0.5,0.55),
+    new THREE.Vector3(0.1,0.0,0.58),
+    new THREE.Vector3(0.1,-0.5,0.48),
+    new THREE.Vector3(0.08,-0.95,0.25),
+  ],0.018,grooveMat,28);
+  heartGroup.add(sept);
+
+  heartGroup.rotation.x=-0.3;
+  heartGroup.rotation.z=0.1;
+}
+
+// ===== ANIMATION =====
+function animate(){
+  requestAnimationFrame(animate);
+  hbPhase+=0.04;
+  const beat=1+Math.sin(hbPhase)*0.018+Math.sin(hbPhase*2.2)*0.008;
+  rotX+=(tRotX-rotX)*0.08;
+  rotY+=(tRotY-rotY)*0.08;
+  zoom+=(tZoom-zoom)*0.1;
+  heartGroup.rotation.x=rotX;
+  heartGroup.rotation.y=rotY;
+  heartGroup.scale.set(beat*zoom,beat*zoom,beat*zoom);
+  renderer.render(scene,camera);
+}
+
+// ===== TOUCH / MOUSE =====
+function gd(t){const dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy)}
+let touchStartTime=0,touchMoved=false;
+
+canvas.addEventListener('touchstart',e=>{
+  touchStartTime=Date.now();touchMoved=false;
+  if(e.touches.length===1){dragging=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY}
+  if(e.touches.length===2)ldist=gd(e.touches);
+},{passive:true});
+
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();touchMoved=true;
+  if(e.touches.length===1&&dragging){
+    const dx=e.touches[0].clientX-lx,dy=e.touches[0].clientY-ly;
+    tRotY+=dx*0.008;tRotX+=dy*0.006;
+    tRotX=Math.max(-1.5,Math.min(1.5,tRotX));
+    lx=e.touches[0].clientX;ly=e.touches[0].clientY;
+  }
+  if(e.touches.length===2){
+    const d=gd(e.touches);tZoom*=d/ldist;
+    tZoom=Math.max(0.4,Math.min(3.5,tZoom));ldist=d;
+  }
+},{passive:false});
+
+canvas.addEventListener('touchend',e=>{
+  dragging=false;
+  // Tap detection
+  if(!touchMoved&&Date.now()-touchStartTime<300&&e.changedTouches.length===1){
+    handleTap(e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+  }
+});
+
+// Mouse
+canvas.addEventListener('mousedown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;touchMoved=false;touchStartTime=Date.now()});
+canvas.addEventListener('mousemove',e=>{
+  if(dragging){
+    touchMoved=true;
+    tRotY+=(e.clientX-lx)*0.006;tRotX+=(e.clientY-ly)*0.005;
+    tRotX=Math.max(-1.5,Math.min(1.5,tRotX));
+    lx=e.clientX;ly=e.clientY;
+  }
+  // Hover
+  updateHover(e.clientX,e.clientY);
+});
+canvas.addEventListener('mouseup',e=>{
+  dragging=false;
+  if(!touchMoved&&Date.now()-touchStartTime<300) handleTap(e.clientX,e.clientY);
+});
+canvas.addEventListener('wheel',e=>{e.preventDefault();tZoom-=e.deltaY*0.002;tZoom=Math.max(0.4,Math.min(3.5,tZoom))},{passive:false});
+
+// ===== RAYCASTING =====
+function getAllPartMeshes(){
+  let all=[];
+  for(let k in partMeshes) all=all.concat(partMeshes[k]);
+  return all;
+}
+
+function getPartAt(x,y){
+  mouse.x=(x/window.innerWidth)*2-1;
+  mouse.y=-(y/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(getAllPartMeshes(),false);
+  if(hits.length>0) return hits[0].object.userData.part;
+  return null;
+}
+
+function handleTap(x,y){
+  const part=getPartAt(x,y);
+  if(part&&D[part]) showInfo(part);
+}
+
+function updateHover(x,y){
+  const part=getPartAt(x,y);
+  if(part&&D[part]){
+    canvas.style.cursor='pointer';
+    tooltip.classList.add('show');
+    tooltip.style.left=(x+16)+'px';
+    tooltip.style.top=(y-20)+'px';
+    document.getElementById('ttxt').textContent=D[part].t;
+    tooltip.querySelector('.td').style.background=D[part].tc;
+    // Highlight
+    if(hoveredPart!==part){
+      resetHighlight();
+      hoveredPart=part;
+      partMeshes[part]?.forEach(m=>{m._origEmissive=m.material.emissive?.getHex();m.material.emissive?.setHex(0x331111)});
     }
+  }else{
+    canvas.style.cursor='grab';
+    tooltip.classList.remove('show');
+    if(hoveredPart){resetHighlight();hoveredPart=null}
+  }
+}
+
+function resetHighlight(){
+  if(!hoveredPart)return;
+  partMeshes[hoveredPart]?.forEach(m=>{
+    if(m._origEmissive!==undefined) m.material.emissive?.setHex(m._origEmissive);
   });
 }
 
-function onMarkerFound(){
-  markerVisible = true;
-  const st = document.getElementById('status');
-  st.classList.add('ok');
-  document.getElementById('stxt').textContent='✅ Marker bulundu — 3D Kalp yükleniyor!';
-
-  // Show model
-  const wrap = document.getElementById('model-wrap');
-  wrap.classList.add('active');
-  wrap.style.cssText='position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;';
-
-  // Load Sketchfab iframe
-  const iframe = document.getElementById('sf-iframe');
-  if(!iframe.src || iframe.src === '' || iframe.src === window.location.href){
-    iframe.src = SKETCHFAB_URL;
-  }
-
-  // Show nav & hint
-  document.getElementById('nav').style.display='flex';
-  document.getElementById('hint').style.display='flex';
-  setTimeout(()=>{document.getElementById('hint').style.display='none'},6000);
-
-  // Update status after model "loads"
-  setTimeout(()=>{
-    document.getElementById('stxt').textContent='🫀 3D Model aktif — Döndürün & Keşfedin!';
-  },3000);
-}
-
-function onMarkerLost(){
-  markerVisible = false;
-  const st = document.getElementById('status');
-  st.classList.remove('ok');
-  document.getElementById('stxt').textContent='Marker aranıyor…';
-
-  // Hide model
-  document.getElementById('model-wrap').classList.remove('active');
-  document.getElementById('nav').style.display='none';
-  closePanel();
-}
-
-// =============================================
-// INFO PANEL
-// =============================================
+// ===== INFO PANEL =====
 function showInfo(k){
-  const d=DATA[k]; if(!d)return;
+  const d=D[k];if(!d)return;
   document.getElementById('pi').textContent=d.i;
   document.getElementById('pt').textContent=' '+d.t;
   const h=document.querySelector('.ph h3');
-  let ot=h.querySelector('.tag'); if(ot)ot.remove();
+  let ot=h.querySelector('.tag');if(ot)ot.remove();
   const tg=document.createElement('span');
   tg.className='tag';tg.style.cssText='background:'+d.tc+'22;color:'+d.tc+';border:1px solid '+d.tc+'44';
   tg.textContent=d.tag;h.appendChild(tg);
@@ -349,20 +551,36 @@ function showInfo(k){
   document.getElementById('pdesc').textContent=d.d;
   document.getElementById('pfact').innerHTML=d.f;
   document.getElementById('panel').classList.add('open');
-}
-function closePanel(){document.getElementById('panel').classList.remove('open')}
 
-// =============================================
-// RESIZE
-// =============================================
+  // Highlight tapped part
+  resetHighlight();
+  hoveredPart=k;
+  partMeshes[k]?.forEach(m=>{m._origEmissive=m.material.emissive?.getHex();m.material.emissive?.setHex(0x442222)});
+}
+function closePanel(){
+  document.getElementById('panel').classList.remove('open');
+  resetHighlight();hoveredPart=null;
+}
+
+// ===== RESIZE =====
 window.addEventListener('resize',()=>{
-  const sw = document.getElementById('sketchfab-wrap');
-  if(window.innerWidth < 400){
-    sw.style.width='300px'; sw.style.height='340px';
-  } else {
-    sw.style.width='340px'; sw.style.height='380px';
-  }
+  if(!camera||!renderer)return;
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
+
+// ===== BOOT =====
+function boot(){
+  document.getElementById('splash').classList.add('out');
+  setTimeout(()=>{document.getElementById('splash').style.display='none'},700);
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('status').style.display='flex';
+  document.getElementById('hint').style.display='flex';
+  setTimeout(()=>{document.getElementById('hint').style.display='none'},7000);
+  startCamera();
+  initThree();
+}
 </script>
 </body>
 </html>
