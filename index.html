@@ -2,210 +2,446 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Demo - Artırılmış Gerçeklik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR Kalp Anatomisi - Eğitim Uygulaması</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
-    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; font-family: 'Segoe UI', -apple-system, sans-serif; }
 
-    /* Bilgilendirme overlay */
-    #info-overlay {
+    /* Üst başlık */
+    #header {
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 9999;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 58, 138, 0.88));
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.92), rgba(153, 27, 27, 0.95));
       backdrop-filter: blur(12px);
       color: white;
-      padding: 20px 24px;
-      text-align: center;
-      border-bottom: 2px solid rgba(96, 165, 250, 0.4);
-      animation: slideDown 0.6s ease-out;
-    }
-
-    @keyframes slideDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    #info-overlay h2 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    #info-overlay p {
-      margin: 0;
-      font-size: 13px;
-      opacity: 0.85;
-      line-height: 1.5;
-    }
-
-    #info-overlay .marker-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      padding: 8px 16px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 20px;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-
-    #info-overlay .marker-hint a {
-      color: #60a5fa;
-      text-decoration: underline;
-    }
-
-    #close-btn {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      background: rgba(255,255,255,0.15);
-      border: none;
-      color: white;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 16px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
+      gap: 12px;
+      border-bottom: 2px solid rgba(252, 165, 165, 0.3);
     }
-    #close-btn:hover { background: rgba(255,255,255,0.3); }
 
-    /* AR badge */
-    #ar-badge {
+    #header .icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    #header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+    #header p { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+    /* Alt bilgi paneli */
+    #info-panel {
       position: fixed;
-      bottom: 20px;
+      bottom: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: rgba(10, 10, 20, 0.93);
+      backdrop-filter: blur(16px);
+      color: white;
+      border-top: 2px solid rgba(220, 38, 38, 0.5);
+      transform: translateY(100%);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+
+    #info-panel.active { transform: translateY(0); }
+
+    #info-panel .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    #info-panel .panel-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #info-panel .panel-header .tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #close-panel {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #info-panel .panel-body { padding: 16px 20px 24px; }
+
+    #info-panel .stat-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    #info-panel .stat {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    #info-panel .stat .val {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    #info-panel .stat .lbl {
+      font-size: 10px;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #info-panel .desc {
+      font-size: 14px;
+      line-height: 1.7;
+      opacity: 0.85;
+      margin-bottom: 14px;
+    }
+
+    #info-panel .fun-fact {
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(168, 85, 247, 0.15));
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    #info-panel .fun-fact strong {
+      color: #fca5a5;
+    }
+
+    /* Navigasyon butonları */
+    #nav-buttons {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9998;
+      display: flex;
+      gap: 8px;
+      transition: opacity 0.3s;
+    }
+
+    #nav-buttons.hidden { opacity: 0; pointer-events: none; }
+
+    .nav-btn {
+      padding: 10px 16px;
+      border-radius: 25px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: rgba(10, 10, 20, 0.8);
+      backdrop-filter: blur(8px);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s;
+      white-space: nowrap;
+    }
+
+    .nav-btn:active {
+      transform: scale(0.95);
+      background: rgba(220, 38, 38, 0.4);
+    }
+
+    .nav-btn .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* AR status badge */
+    #ar-status {
+      position: fixed;
+      top: 80px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(10, 10, 20, 0.75);
       backdrop-filter: blur(8px);
       color: white;
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      border: 1px solid rgba(96, 165, 250, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 8px;
-      animation: pulse 2s ease-in-out infinite;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s;
     }
 
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.4); }
-      50% { box-shadow: 0 0 0 12px rgba(96, 165, 250, 0); }
-    }
-
-    #ar-badge .dot {
-      width: 8px;
-      height: 8px;
-      background: #4ade80;
+    #ar-status .pulse {
+      width: 8px; height: 8px;
       border-radius: 50%;
+      background: #facc15;
       animation: blink 1.5s ease-in-out infinite;
     }
+
+    #ar-status.found .pulse { background: #4ade80; }
 
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+
+    /* Talimat overlay — marker bulunamazsa */
+    #instructions {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000;
+      background: linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #2d1040 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+      transition: opacity 0.5s;
+    }
+
+    #instructions.hidden { opacity: 0; pointer-events: none; }
+
+    #instructions h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #f87171, #fb923c, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #instructions p { font-size: 14px; opacity: 0.7; margin-bottom: 30px; line-height: 1.6; }
+
+    #instructions .step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.06);
+      padding: 14px 20px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      width: 100%;
+      max-width: 340px;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    #instructions .step .num {
+      width: 32px; height: 32px;
+      background: rgba(220, 38, 38, 0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+      color: #fca5a5;
+    }
+
+    #instructions .step span { font-size: 13px; line-height: 1.5; }
+
+    #start-btn {
+      margin-top: 24px;
+      padding: 14px 40px;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+    }
+
+    #instructions .marker-link {
+      margin-top: 16px;
+      color: #93c5fd;
+      font-size: 12px;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Bilgilendirme paneli -->
-  <div id="info-overlay">
-    <button id="close-btn" onclick="this.parentElement.style.display='none'">✕</button>
-    <h2>🔮 Artırılmış Gerçeklik Demo</h2>
-    <p>Kameranızı <strong>HIRO marker</strong>'a doğrultun ve 3D objelerin belirmesini izleyin!</p>
-    <div class="marker-hint">
-      📎 Marker'ı buradan yazdırın:
-      <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">
-        HIRO Marker İndir
-      </a>
+  <!-- Başlangıç talimatları -->
+  <div id="instructions">
+    <h2>❤️ Kalp Anatomisi AR</h2>
+    <p>Artırılmış gerçeklik ile insan kalbini<br>interaktif olarak keşfedin</p>
+
+    <div class="step">
+      <div class="num">1</div>
+      <span>HIRO marker'ını başka bir ekrandan açın veya kağıda yazdırın</span>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <span>Kameranızı marker'a doğrultun — 3D kalp modeli belirsin</span>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <span>Kalbin bölgelerine dokunarak anatomik bilgileri okuyun</span>
+    </div>
+
+    <button id="start-btn" onclick="startAR()">Başla →</button>
+    <a class="marker-link" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">
+      📎 HIRO Marker'ı İndir
+    </a>
+  </div>
+
+  <!-- Üst başlık -->
+  <div id="header" style="display:none;">
+    <div class="icon">❤️</div>
+    <div>
+      <h1>Kalp Anatomisi AR</h1>
+      <p>Bölgelere dokunarak keşfet</p>
     </div>
   </div>
 
   <!-- AR durumu -->
-  <div id="ar-badge">
-    <span class="dot"></span>
-    Kamera aktif — Marker'ı arayın
+  <div id="ar-status" style="display:none;">
+    <span class="pulse"></span>
+    <span id="status-text">Marker aranıyor...</span>
   </div>
 
-  <!-- A-Frame AR sahnesi -->
+  <!-- Bilgi paneli -->
+  <div id="info-panel">
+    <div class="panel-header">
+      <h2>
+        <span id="panel-icon">🫀</span>
+        <span id="panel-title">Aort Damarı</span>
+      </h2>
+      <button id="close-panel" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="stat-row" id="stat-row"></div>
+      <p class="desc" id="panel-desc"></p>
+      <div class="fun-fact" id="panel-fact"></div>
+    </div>
+  </div>
+
+  <!-- Navigasyon butonları -->
+  <div id="nav-buttons" class="hidden">
+    <button class="nav-btn" onclick="showInfo('aort')">
+      <span class="dot" style="background:#ef4444"></span> Aort
+    </button>
+    <button class="nav-btn" onclick="showInfo('sag_ventrikul')">
+      <span class="dot" style="background:#3b82f6"></span> Sağ Ventrikül
+    </button>
+    <button class="nav-btn" onclick="showInfo('sol_ventrikul')">
+      <span class="dot" style="background:#a855f7"></span> Sol Ventrikül
+    </button>
+    <button class="nav-btn" onclick="showInfo('atriyum')">
+      <span class="dot" style="background:#f59e0b"></span> Atriyum
+    </button>
+  </div>
+
+  <!-- A-Frame AR -->
   <a-scene
+    id="ar-scene"
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; antialias: true"
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true"
+    style="display:none;"
   >
-    <!-- Hiro marker üzerinde gösterilecek 3D objeler -->
-    <a-marker preset="hiro">
+    <a-marker id="heart-marker" preset="hiro">
 
-      <!-- Dönen renkli küp -->
-      <a-box
-        position="0 0.6 0"
-        scale="0.6 0.6 0.6"
-        color="#6366f1"
-        opacity="0.9"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-        animation__scale="property: scale; from: 0.6 0.6 0.6; to: 0.75 0.75 0.75; dir: alternate; loop: true; dur: 1500; easing: easeInOutQuad"
-      ></a-box>
+      <!-- Taban platform -->
+      <a-cylinder position="0 0.02 0" radius="1.3" height="0.04" color="#1e1e2e" opacity="0.6"></a-cylinder>
+      <a-ring position="0 0.05 0" rotation="-90 0 0" radius-inner="1.25" radius-outer="1.35" color="#dc2626" opacity="0.3"
+        animation="property: rotation; from: -90 0 0; to: -90 360 0; loop: true; dur: 15000; easing: linear"></a-ring>
 
-      <!-- Yörüngede dönen küre -->
-      <a-entity
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear"
-      >
-        <a-sphere
-          position="1 0.6 0"
-          radius="0.2"
-          color="#f472b6"
-          opacity="0.85"
-        ></a-sphere>
-      </a-entity>
+      <!-- === KALP GÖVDESİ (ana kütle) === -->
+      <!-- Ana kalp gövdesi -->
+      <a-sphere position="0 0.65 0" radius="0.55" color="#c0392b" opacity="0.85"
+        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
+      ></a-sphere>
+      <!-- Üst kısım (atriyumlar) -->
+      <a-sphere position="-0.18 1.05 0" radius="0.3" color="#a93226" opacity="0.85"
+        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
+      ></a-sphere>
+      <a-sphere position="0.18 1.05 0" radius="0.3" color="#922b21" opacity="0.85"
+        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
+      ></a-sphere>
+      <!-- Alt sivri uç -->
+      <a-cone position="0.05 0.2 0" radius-bottom="0" radius-top="0.35" height="0.4" color="#c0392b" opacity="0.85" rotation="0 0 10"
+        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
+      ></a-cone>
 
-      <!-- İkinci yörünge -->
-      <a-entity
-        animation="property: rotation; to: 0 -360 0; loop: true; dur: 5000; easing: linear"
-      >
-        <a-sphere
-          position="0 0.6 1.2"
-          radius="0.15"
-          color="#4ade80"
-          opacity="0.85"
-        ></a-sphere>
-      </a-entity>
+      <!-- === AORT DAMARI (üstten çıkan kırmızı boru) === -->
+      <a-cylinder id="ar-aort" position="0 1.35 0" radius="0.1" height="0.45" color="#e74c3c" opacity="0.9"
+        class="clickable" data-part="aort"
+        animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
+      ></a-cylinder>
+      <a-sphere position="0.15 1.6 0" radius="0.1" color="#e74c3c" opacity="0.9"></a-sphere>
+      <a-cylinder position="0.35 1.55 0" radius="0.07" height="0.35" color="#e74c3c" opacity="0.9" rotation="0 0 80"></a-cylinder>
 
-      <!-- Taban platformu -->
-      <a-cylinder
-        position="0 0.05 0"
-        radius="1.2"
-        height="0.1"
-        color="#1e293b"
-        opacity="0.7"
+      <!-- === PULMONER ARTER (mavi boru) === -->
+      <a-cylinder position="-0.2 1.3 0.08" radius="0.07" height="0.35" color="#3498db" opacity="0.85" rotation="10 0 15"
+        animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
       ></a-cylinder>
 
-      <!-- Yazı -->
-      <a-text
-        value="AR DEMO"
-        position="0 1.4 0"
-        align="center"
-        color="#fbbf24"
-        scale="1.2 1.2 1.2"
-        font="mozillavr"
-        animation="property: position; from: 0 1.4 0; to: 0 1.55 0; dir: alternate; loop: true; dur: 2000; easing: easeInOutSine"
-      ></a-text>
+      <!-- === VENA KAVALAR (mavi damarlar - sağ taraf) === -->
+      <a-cylinder position="0.35 1.15 -0.05" radius="0.06" height="0.35" color="#2980b9" opacity="0.8" rotation="5 0 -15"></a-cylinder>
+      <a-cylinder position="0.38 0.55 -0.05" radius="0.06" height="0.35" color="#2980b9" opacity="0.8" rotation="5 0 -10"></a-cylinder>
+
+      <!-- === ETİKET NOKTALARI (tıklanabilir işaretçiler) === -->
+
+      <!-- Aort etiketi -->
+      <a-sphere position="0.55 1.55 0" radius="0.08" color="#ef4444" opacity="0.9" class="clickable" data-part="aort"
+        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000"
+      ></a-sphere>
+      <a-text value="AORT" position="0.55 1.72 0" align="center" color="#fca5a5" scale="0.5 0.5 0.5" font="mozillavr"></a-text>
+
+      <!-- Sağ Ventrikül etiketi -->
+      <a-sphere position="0.6 0.6 0.3" radius="0.08" color="#3b82f6" opacity="0.9" class="clickable" data-part="sag_ventrikul"
+        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 250"
+      ></a-sphere>
+      <a-text value="SAG V." position="0.6 0.77 0.3" align="center" color="#93c5fd" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
+
+      <!-- Sol Ventrikül etiketi -->
+      <a-sphere position="-0.6 0.6 0.3" radius="0.08" color="#a855f7" opacity="0.9" class="clickable" data-part="sol_ventrikul"
+        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 500"
+      ></a-sphere>
+      <a-text value="SOL V." position="-0.6 0.77 0.3" align="center" color="#d8b4fe" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
+
+      <!-- Atriyum etiketi -->
+      <a-sphere position="0 1.25 0.35" radius="0.08" color="#f59e0b" opacity="0.9" class="clickable" data-part="atriyum"
+        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 750"
+      ></a-sphere>
+      <a-text value="ATRIYUM" position="0 1.42 0.35" align="center" color="#fde68a" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
 
     </a-marker>
 
@@ -213,21 +449,131 @@
   </a-scene>
 
   <script>
-    // Marker bulunduğunda badge güncelle
-    const marker = document.querySelector('a-marker');
-    const badge = document.getElementById('ar-badge');
+    // Anatomi verileri
+    const heartData = {
+      aort: {
+        icon: '🔴',
+        title: 'Aort Damarı (Aorta)',
+        tag: 'Ana Arter',
+        tagColor: '#dc2626',
+        stats: [
+          { val: '2.5 cm', lbl: 'Çap' },
+          { val: '30-40 cm', lbl: 'Uzunluk' },
+          { val: '5 L/dk', lbl: 'Kan Akışı' }
+        ],
+        desc: 'Aort, vücudun en büyük atardamarıdır. Sol ventrikülden çıkarak oksijenli kanı tüm vücuda taşır. Aort kapağı sayesinde kanın geri akması önlenir. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur.',
+        fact: '<strong>💡 Biliyor muydun?</strong> Aort o kadar güçlüdür ki, kalp her attığında içinden geçen kan 1 metre yüksekliğe fışkırabilir! Duvarları 2mm kalınlığında elastik dokudan oluşur.'
+      },
+      sag_ventrikul: {
+        icon: '🔵',
+        title: 'Sağ Ventrikül',
+        tag: 'Alt Sağ Odacık',
+        tagColor: '#3b82f6',
+        stats: [
+          { val: '85 mL', lbl: 'Hacim' },
+          { val: '25 mmHg', lbl: 'Basınç' },
+          { val: '3-5 mm', lbl: 'Duvar Kalınlığı' }
+        ],
+        desc: 'Sağ ventrikül, oksijeni azalmış kanı akciğerlere pompalayan odacıktır. Triküspit kapak ile sağ atriyumdan kan alır ve pulmoner kapak aracılığıyla pulmoner artere gönderir. Sol ventriküle göre daha ince duvarlıdır çünkü kan sadece akciğerlere gider.',
+        fact: '<strong>💡 Biliyor muydun?</strong> Sağ ventrikül, sol ventriküle göre 6 kat daha az basınçla çalışır. Akciğerler yakın olduğu için fazla güce ihtiyaç duymaz!'
+      },
+      sol_ventrikul: {
+        icon: '🟣',
+        title: 'Sol Ventrikül',
+        tag: 'Alt Sol Odacık',
+        tagColor: '#a855f7',
+        stats: [
+          { val: '120 mL', lbl: 'Hacim' },
+          { val: '120 mmHg', lbl: 'Basınç' },
+          { val: '12-15 mm', lbl: 'Duvar Kalınlığı' }
+        ],
+        desc: 'Sol ventrikül, kalbin en güçlü odacığıdır. Akciğerlerden gelen oksijenli kanı aort aracılığıyla tüm vücuda pompalar. Duvarları sağ ventriküle göre 3 kat daha kalındır çünkü kanı tüm vücuda ulaştırması gerekir.',
+        fact: '<strong>💡 Biliyor muydun?</strong> Sol ventrikül bir günde yaklaşık 7.500 litre kan pompalar. Bu, olimpik bir yüzme havuzunu 7 günde doldurabilecek miktardır!'
+      },
+      atriyum: {
+        icon: '🟡',
+        title: 'Atriyumlar (Kulakçıklar)',
+        tag: 'Üst Odacıklar',
+        tagColor: '#f59e0b',
+        stats: [
+          { val: '2 Adet', lbl: 'Sağ & Sol' },
+          { val: '~70 mL', lbl: 'Her Birinin Hacmi' },
+          { val: '2 mm', lbl: 'Duvar Kalınlığı' }
+        ],
+        desc: 'Atriyumlar kalbin üst odacıklarıdır. Sağ atriyum vücuttan dönen oksijensiz kanı, sol atriyum ise akciğerlerden dönen oksijenli kanı toplar. İnce duvarlıdırlar çünkü kanı sadece alt odacıklara (ventriküller) aktarırlar.',
+        fact: '<strong>💡 Biliyor muydun?</strong> "Atriyum" kelimesi Latince\'de "giriş holü" anlamına gelir. Tıpkı bir evin girişi gibi, kan buradan kalbe giriş yapar!'
+      }
+    };
 
-    if (marker) {
-      marker.addEventListener('markerFound', () => {
-        badge.innerHTML = '<span class="dot" style="background:#4ade80"></span> ✅ Marker bulundu!';
-        badge.style.borderColor = 'rgba(74, 222, 128, 0.5)';
-      });
-
-      marker.addEventListener('markerLost', () => {
-        badge.innerHTML = '<span class="dot"></span> Kamera aktif — Marker\'ı arayın';
-        badge.style.borderColor = 'rgba(96, 165, 250, 0.3)';
-      });
+    function startAR() {
+      document.getElementById('instructions').classList.add('hidden');
+      document.getElementById('header').style.display = 'flex';
+      document.getElementById('ar-status').style.display = 'flex';
+      document.getElementById('ar-scene').style.display = '';
+      setTimeout(() => {
+        document.getElementById('instructions').style.display = 'none';
+      }, 600);
     }
+
+    function showInfo(part) {
+      const data = heartData[part];
+      if (!data) return;
+
+      document.getElementById('panel-icon').textContent = data.icon;
+      document.getElementById('panel-title').textContent = data.title;
+
+      // Tag
+      const header = document.querySelector('#info-panel .panel-header h2');
+      let existingTag = header.querySelector('.tag');
+      if (existingTag) existingTag.remove();
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.style.background = data.tagColor + '33';
+      tag.style.color = data.tagColor;
+      tag.style.border = '1px solid ' + data.tagColor + '55';
+      tag.textContent = data.tag;
+      header.appendChild(tag);
+
+      // İstatistikler
+      const statRow = document.getElementById('stat-row');
+      statRow.innerHTML = data.stats.map(s =>
+        '<div class="stat"><div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div></div>'
+      ).join('');
+
+      document.getElementById('panel-desc').textContent = data.desc;
+      document.getElementById('panel-fact').innerHTML = data.fact;
+
+      document.getElementById('info-panel').classList.add('active');
+      document.getElementById('nav-buttons').classList.add('hidden');
+    }
+
+    function closePanel() {
+      document.getElementById('info-panel').classList.remove('active');
+      document.getElementById('nav-buttons').classList.remove('hidden');
+    }
+
+    // Marker olayları
+    window.addEventListener('load', () => {
+      const marker = document.getElementById('heart-marker');
+      const status = document.getElementById('ar-status');
+      const statusText = document.getElementById('status-text');
+      const navBtns = document.getElementById('nav-buttons');
+
+      if (marker) {
+        marker.addEventListener('markerFound', () => {
+          status.classList.add('found');
+          statusText.textContent = '✅ Kalp modeli yüklendi!';
+          navBtns.classList.remove('hidden');
+        });
+
+        marker.addEventListener('markerLost', () => {
+          status.classList.remove('found');
+          statusText.textContent = 'Marker aranıyor...';
+          navBtns.classList.add('hidden');
+          closePanel();
+        });
+      }
+    });
   </script>
 
 </body>
