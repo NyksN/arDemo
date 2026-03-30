@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="utf-8">
-    <title>WebAR Kalp - Mobil Sürüm</title>
+    <title>WebAR Kalp - Kesin Çözüm</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -11,7 +11,6 @@
     <style>
         body { margin: 0; overflow: hidden; }
         
-        /* Mobilde parmak kapatmasın diye ekranın altına sabitlenmiş şık bilgi kutusu */
         #bilgi-kutusu {
             position: fixed;
             bottom: 5%;
@@ -21,7 +20,7 @@
             color: #ffffff;
             padding: 15px 20px;
             border-radius: 12px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 16px;
             display: none;
             z-index: 9999;
@@ -30,6 +29,7 @@
             text-align: center;
             box-shadow: 0 8px 20px rgba(0,0,0,0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none; /* Kutuya tıklanmasını engelle */
         }
     </style>
 </head>
@@ -48,12 +48,7 @@
             <a-asset-item id="kalp-modeli" src="kalp.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker 
-            preset="hiro" 
-            raycaster="objects: .bilgi-noktasi" 
-            emitevents="true" 
-            cursor="fuse: false; rayOrigin: mouse;" 
-            id="markerA">
+        <a-marker preset="hiro" id="markerA">
             
             <a-entity position="0 0 0" scale="1 1 1" gesture-handler>
                 
@@ -82,28 +77,41 @@
             </a-entity>
         </a-marker>
 
-        <a-entity camera></a-entity>
+        <a-entity camera cursor="rayOrigin: mouse;" raycaster="objects: .bilgi-noktasi"></a-entity>
+
     </a-scene>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const bilgiKutusu = document.getElementById("bilgi-kutusu");
-            const scene = document.querySelector('a-scene');
+            const noktalar = document.querySelectorAll(".bilgi-noktasi");
             let zamanlayici;
 
-            // Dokunma olaylarını dinle
-            scene.addEventListener('click', function (evt) {
-                if (evt.detail.intersectedEl && evt.detail.intersectedEl.classList.contains('bilgi-noktasi')) {
-                    const metin = evt.detail.intersectedEl.getAttribute("data-bilgi");
-                    
-                    bilgiKutusu.innerHTML = metin;
-                    bilgiKutusu.style.display = "block";
+            noktalar.forEach(function(nokta) {
+                // Hem fare tıklamasını hem de mobildeki "ekrana dokunma" (touchstart) olayını dinliyoruz
+                ['click', 'touchstart'].forEach(function(etkinlik) {
+                    nokta.addEventListener(etkinlik, function(evt) {
+                        
+                        // Zoom eklentisinin bu dokunuşu yutmasını engelliyoruz
+                        evt.stopPropagation();
+                        if(evt.cancelable) evt.preventDefault(); 
 
-                    clearTimeout(zamanlayici);
-                    zamanlayici = setTimeout(function() {
-                        bilgiKutusu.style.display = "none";
-                    }, 4000);
-                } else {
+                        const metin = this.getAttribute("data-bilgi");
+                        bilgiKutusu.innerHTML = metin;
+                        bilgiKutusu.style.display = "block";
+
+                        clearTimeout(zamanlayici);
+                        zamanlayici = setTimeout(function() {
+                            bilgiKutusu.style.display = "none";
+                        }, 4000);
+                    });
+                });
+            });
+
+            // Ekranda boş bir yere dokunulursa kutuyu kapat
+            document.querySelector('a-scene').addEventListener('touchstart', function(evt) {
+                // Eğer dokunulan şey bir bilgi noktası DEĞİLSE kapat
+                if (!evt.target.classList.contains('bilgi-noktasi')) {
                     bilgiKutusu.style.display = "none";
                 }
             });
