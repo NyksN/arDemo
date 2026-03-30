@@ -1,648 +1,487 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-    <title>WebAR Kalp - Gelişmiş Mobil Sürüm</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>WebAR Kalp - Stabil Sürüm</title>
 
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-    <style>
-        :root{
-            --text:#f6f8ff;
-            --muted:#b9c5df;
-            --panel:rgba(10,14,24,0.72);
-            --panel-strong:rgba(9,13,22,0.92);
-            --border:rgba(255,255,255,0.12);
-            --cyan:#68e8ff;
-            --pink:#ff6b9b;
-            --green:#6ef3ae;
-            --amber:#ffd166;
-            --shadow:0 18px 36px rgba(0,0,0,.34);
-            --radius:20px;
-        }
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
 
-        *{box-sizing:border-box}
-        html,body{
-            margin:0;
-            width:100%;
-            height:100%;
-            overflow:hidden;
-            background:#000;
-            font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;
-            color:var(--text);
-            -webkit-tap-highlight-color:transparent;
-            touch-action:none;
-        }
+    #app {
+      position: fixed;
+      inset: 0;
+    }
 
-        body{
-            position:fixed;
-            inset:0;
-        }
+    a-scene {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
 
-        body::before{
-            content:"";
-            position:fixed;
-            inset:0;
-            pointer-events:none;
-            z-index:4;
-            background:
-                radial-gradient(circle at 15% 10%, rgba(104,232,255,.16), transparent 28%),
-                radial-gradient(circle at 85% 12%, rgba(255,107,155,.14), transparent 28%),
-                linear-gradient(to bottom, rgba(0,0,0,.24), transparent 26%, transparent 78%, rgba(0,0,0,.34));
-        }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-        a-scene,
-        .a-canvas,
-        canvas,
-        video,
-        .arjs-video{
-            position:fixed !important;
-            inset:0 !important;
-            width:100% !important;
-            height:100% !important;
-        }
+    .top-card {
+      position: absolute;
+      top: max(10px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(92vw, 420px);
+      background: rgba(12, 16, 24, 0.78);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-sizing: border-box;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    }
 
-        a-scene{
-            z-index:0 !important;
-            background:transparent !important;
-        }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
 
-        video,
-        .arjs-video{
-            z-index:0 !important;
-            object-fit:cover !important;
-            background:transparent !important;
-            visibility:visible !important;
-            opacity:1 !important;
-        }
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+    }
 
-        .a-canvas,
-        canvas{
-            z-index:1 !important;
-            background:transparent !important;
-        }
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #d6deef;
+    }
 
-        .a-enter-vr,
-        .a-orientation-modal{
-            display:none !important;
-        }
+    .status {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: #e8f0ff;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
 
-        .hud{
-            position:fixed;
-            inset:0;
-            z-index:8;
-            pointer-events:none;
-        }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ffd166;
+      box-shadow: 0 0 10px rgba(255,209,102,0.7);
+    }
 
-        .card{
-            pointer-events:auto;
-            background:var(--panel);
-            border:1px solid var(--border);
-            border-radius:var(--radius);
-            backdrop-filter:blur(14px);
-            -webkit-backdrop-filter:blur(14px);
-            box-shadow:var(--shadow);
-        }
+    .status.ok .dot {
+      background: #5ef0a8;
+      box-shadow: 0 0 10px rgba(94,240,168,0.7);
+    }
 
-        .topbar{
-            position:fixed;
-            top:max(12px, env(safe-area-inset-top));
-            left:50%;
-            transform:translateX(-50%);
-            width:min(94%, 470px);
-            padding:14px;
-        }
+    .status.cam .dot {
+      background: #62dfff;
+      box-shadow: 0 0 10px rgba(98,223,255,0.7);
+    }
 
-        .topbar-row{
-            display:flex;
-            align-items:flex-start;
-            justify-content:space-between;
-            gap:14px;
-        }
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(92vw, 420px);
+      background: rgba(12, 16, 24, 0.72);
+      color: #dfe7f7;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 11px 14px;
+      box-sizing: border-box;
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+    }
 
-        .brand{
-            display:flex;
-            align-items:flex-start;
-            gap:12px;
-            min-width:0;
-        }
+    #infoBox {
+      position: absolute;
+      left: 50%;
+      bottom: calc(74px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(92vw, 390px);
+      background: rgba(10, 14, 22, 0.92);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      box-sizing: border-box;
+      padding: 14px;
+      display: none;
+      pointer-events: auto;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.34);
+    }
 
-        .brand-icon{
-            width:46px;
-            height:46px;
-            border-radius:16px;
-            display:grid;
-            place-items:center;
-            flex:0 0 auto;
-            font-size:22px;
-            border:1px solid rgba(255,255,255,.12);
-            background:linear-gradient(135deg, rgba(104,232,255,.2), rgba(255,107,155,.2));
-            box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-        }
+    #infoBox.show { display: block; }
 
-        .brand h1{
-            margin:0;
-            font-size:18px;
-            line-height:1.15;
-            letter-spacing:.2px;
-        }
+    .info-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
 
-        .brand p{
-            margin:6px 0 0;
-            font-size:13px;
-            line-height:1.45;
-            color:var(--muted);
-        }
+    .info-kicker {
+      font-size: 11px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #84eaff;
+      font-weight: 700;
+    }
 
-        .status{
-            flex:0 0 auto;
-            display:flex;
-            align-items:center;
-            gap:8px;
-            padding:9px 11px;
-            border-radius:999px;
-            background:rgba(255,255,255,.06);
-            border:1px solid rgba(255,255,255,.08);
-            white-space:nowrap;
-            font-size:12px;
-            line-height:1;
-        }
+    #infoTitle {
+      margin: 4px 0 0 0;
+      font-size: 20px;
+      line-height: 1.15;
+    }
 
-        .status-dot{
-            width:10px;
-            height:10px;
-            border-radius:50%;
-            background:var(--amber);
-            box-shadow:0 0 12px rgba(255,209,102,.58);
-            transition:all .25s ease;
-        }
+    #infoText {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #dfe7f7;
+    }
 
-        .status.active .status-dot{
-            background:var(--green);
-            box-shadow:0 0 14px rgba(110,243,174,.62);
-        }
+    #closeBtn {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      pointer-events: auto;
+    }
 
-        .status.camera .status-dot{
-            background:var(--cyan);
-            box-shadow:0 0 14px rgba(104,232,255,.62);
-        }
+    .legend {
+      position: absolute;
+      right: 10px;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      background: rgba(12, 16, 24, 0.72);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-sizing: border-box;
+      font-size: 12px;
+      line-height: 1.45;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+    }
 
-        .hint{
-            position:fixed;
-            left:50%;
-            bottom:calc(18px + env(safe-area-inset-bottom));
-            transform:translateX(-50%);
-            width:min(92%, 420px);
-            padding:12px 14px;
-            text-align:center;
-            font-size:13px;
-            color:var(--muted);
-        }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .hint strong{
-            color:var(--text);
-        }
+    .legend-row + .legend-row { margin-top: 6px; }
 
-        .info-box{
-            position:fixed;
-            left:50%;
-            bottom:calc(86px + env(safe-area-inset-bottom));
-            transform:translateX(-50%) translateY(18px);
-            width:min(92%, 400px);
-            padding:16px;
-            border-radius:24px;
-            background:var(--panel-strong);
-            border:1px solid var(--border);
-            box-shadow:0 24px 44px rgba(0,0,0,.42);
-            backdrop-filter:blur(16px);
-            -webkit-backdrop-filter:blur(16px);
-            opacity:0;
-            visibility:hidden;
-            transition:transform .28s ease, opacity .28s ease, visibility .28s ease;
-            z-index:12;
-            pointer-events:auto;
-        }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
 
-        .info-box.show{
-            opacity:1;
-            visibility:visible;
-            transform:translateX(-50%) translateY(0);
-        }
+    .cyan { background: #67e8ff; box-shadow: 0 0 10px rgba(103,232,255,0.75); }
+    .pink { background: #ff6b9b; box-shadow: 0 0 10px rgba(255,107,155,0.75); }
 
-        .info-head{
-            display:flex;
-            align-items:flex-start;
-            justify-content:space-between;
-            gap:12px;
-            margin-bottom:10px;
-        }
-
-        .eyebrow{
-            font-size:12px;
-            font-weight:800;
-            letter-spacing:.5px;
-            text-transform:uppercase;
-            color:var(--cyan);
-        }
-
-        .info-title{
-            margin:6px 0 0;
-            font-size:21px;
-            line-height:1.15;
-            font-weight:800;
-        }
-
-        .close-btn{
-            appearance:none;
-            border:1px solid rgba(255,255,255,.12);
-            background:rgba(255,255,255,.07);
-            color:#fff;
-            width:36px;
-            height:36px;
-            border-radius:12px;
-            font-size:20px;
-            cursor:pointer;
-            flex:0 0 auto;
-        }
-
-        .info-text{
-            margin:0;
-            color:#dbe5fb;
-            font-size:14px;
-            line-height:1.62;
-        }
-
-        .chips{
-            margin-top:12px;
-            display:flex;
-            flex-wrap:wrap;
-            gap:8px;
-        }
-
-        .chip{
-            padding:7px 10px;
-            border-radius:999px;
-            font-size:11px;
-            color:#dce7ff;
-            background:rgba(255,255,255,.06);
-            border:1px solid rgba(255,255,255,.08);
-        }
-
-        .mini-legend{
-            position:fixed;
-            right:max(12px, env(safe-area-inset-right));
-            bottom:calc(18px + env(safe-area-inset-bottom));
-            width:min(42vw, 210px);
-            padding:12px;
-        }
-
-        .mini-legend-title{
-            font-size:12px;
-            color:var(--muted);
-            margin:0 0 10px;
-            text-transform:uppercase;
-            letter-spacing:.45px;
-            font-weight:700;
-        }
-
-        .legend-item{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            font-size:13px;
-            color:#ebf2ff;
-        }
-
-        .legend-item + .legend-item{
-            margin-top:8px;
-        }
-
-        .legend-dot{
-            width:12px;
-            height:12px;
-            border-radius:50%;
-            flex:0 0 auto;
-            box-shadow:0 0 12px currentColor;
-        }
-
-        .legend-dot.cyan{ color:var(--cyan); background:var(--cyan); }
-        .legend-dot.pink{ color:var(--pink); background:var(--pink); }
-
-        .debug-line{
-            position:fixed;
-            left:max(12px, env(safe-area-inset-left));
-            bottom:calc(18px + env(safe-area-inset-bottom));
-            width:min(56vw, 260px);
-            padding:11px 12px;
-            font-size:12px;
-            color:var(--muted);
-        }
-
-        .debug-line strong{
-            color:var(--text);
-        }
-
-        @media (max-width: 760px){
-            .topbar-row{
-                gap:10px;
-            }
-            .status{
-                align-self:center;
-            }
-            .mini-legend{
-                display:none;
-            }
-            .debug-line{
-                display:none;
-            }
-        }
-    </style>
+    @media (max-width: 720px) {
+      .legend { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="hud">
-        <div class="topbar card">
-            <div class="topbar-row">
-                <div class="brand">
-                    <div class="brand-icon">🫀</div>
-                    <div>
-                        <h1>Etkileşimli Kalp AR Deneyimi</h1>
-                        <p>Hiro markerını kameraya göster. Dışarı taşınmış parlayan bilgi kürelerine dokunarak kalp bölümlerini incele.</p>
-                    </div>
-                </div>
-
-                <div class="status" id="statusBox">
-                    <span class="status-dot"></span>
-                    <span id="statusText">Kamera hazırlanıyor</span>
-                </div>
-            </div>
+  <div id="app">
+    <div class="overlay">
+      <div class="top-card">
+        <div class="top-row">
+          <div>
+            <h1 class="title">Etkileşimli Kalp AR</h1>
+            <p class="subtitle">Hiro markerını göster. Dışarıdaki büyük kürelere dokunarak bilgi aç.</p>
+          </div>
+          <div id="statusBox" class="status">
+            <span class="dot"></span>
+            <span id="statusText">Kamera hazırlanıyor</span>
+          </div>
         </div>
+      </div>
 
-        <div class="info-box" id="infoBox" aria-live="polite">
-            <div class="info-head">
-                <div>
-                    <div class="eyebrow">Anatomi bilgisi</div>
-                    <div class="info-title" id="infoTitle">Bölüm</div>
-                </div>
-                <button id="closeBtn" class="close-btn" aria-label="Bilgi penceresini kapat">×</button>
-            </div>
-
-            <p class="info-text" id="infoText">Kalp bölgesine ait açıklama burada görünecek.</p>
-
-            <div class="chips">
-                <span class="chip">Daha kolay dokunma alanı</span>
-                <span class="chip">Çizgi ile bağlantı</span>
-                <span class="chip">Mobil için optimize edildi</span>
-            </div>
+      <div id="infoBox">
+        <div class="info-head">
+          <div>
+            <div class="info-kicker">Anatomi bilgisi</div>
+            <h2 id="infoTitle">Bölüm</h2>
+          </div>
+          <button id="closeBtn" type="button" aria-label="Kapat">×</button>
         </div>
+        <p id="infoText">Bilgi burada açılacak.</p>
+      </div>
 
-        <div class="hint card">
-            <strong>İpucu:</strong> Marker bulunduğunda dışarıdaki parlak küreler aktif olur. Bilgi görmek için kürenin üstüne dokun.
-        </div>
+      <div class="legend">
+        <div class="legend-row"><span class="legend-color cyan"></span><span>Sol Karıncık</span></div>
+        <div class="legend-row"><span class="legend-color pink"></span><span>Sağ Kulakçık</span></div>
+      </div>
 
-        <div class="mini-legend card">
-            <p class="mini-legend-title">Bilgi noktaları</p>
-            <div class="legend-item">
-                <span class="legend-dot cyan"></span>
-                <span>Sol Karıncık</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-dot pink"></span>
-                <span>Sağ Kulakçık</span>
-            </div>
-        </div>
-
-        <div class="debug-line card" id="debugLine">
-            <strong>Durum:</strong> Kamera akışı bekleniyor.
-        </div>
+      <div class="hint" id="hintText">Kalp görünmüyorsa markerı düz tut, ortamı aydınlat ve sayfayı HTTPS ile aç.</div>
     </div>
 
     <a-scene
-        id="scene"
-        embedded
-        vr-mode-ui="enabled: false"
-        renderer="alpha: true; antialias: true; colorManagement: true; precision: mediump;"
-        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+      id="scene"
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
+      arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
 
-        <a-assets>
-            <a-asset-item id="kalp-modeli" src="kalp.glb"></a-asset-item>
-        </a-assets>
+      <a-assets>
+        <a-asset-item id="kalp-modeli" src="kalp.glb"></a-asset-item>
+      </a-assets>
 
-        <a-marker preset="hiro" emitevents="true" id="markerA">
-            <a-entity id="heartRoot" position="0 0 0" rotation="0 0 0" scale="1 1 1">
-                <a-entity gltf-model="#kalp-modeli" id="heartModel"></a-entity>
+      <a-marker preset="hiro" emitevents="true" id="markerA">
+        <a-entity id="heartRoot" position="0 0 0" rotation="0 0 0" scale="1 1 1">
+          <a-entity id="heartModel" gltf-model="#kalp-modeli"></a-entity>
 
-                <a-sphere position="0.317 0.467 -0.386" radius="0.03" color="#68e8ff" opacity="0.95"></a-sphere>
-                <a-sphere position="0.425 -0.242 0.095" radius="0.03" color="#ff6b9b" opacity="0.95"></a-sphere>
+          <!-- Orijinal referans noktaları -->
+          <a-sphere position="0.317 0.467 -0.386" radius="0.035" color="#67e8ff" opacity="0.95"></a-sphere>
+          <a-sphere position="0.425 -0.242 0.095" radius="0.035" color="#ff6b9b" opacity="0.95"></a-sphere>
 
-                <a-entity line="start: 0.317 0.467 -0.386; end: 0.82 0.82 -0.92; color: #68e8ff; opacity: 0.95"></a-entity>
-                <a-entity line="start: 0.425 -0.242 0.095; end: 0.98 -0.62 0.56; color: #ff6b9b; opacity: 0.95"></a-entity>
+          <!-- Bağlantı çizgileri -->
+          <a-entity line="start: 0.317 0.467 -0.386; end: 0.66 0.70 -0.68; color: #67e8ff; opacity: 0.95"></a-entity>
+          <a-entity line="start: 0.425 -0.242 0.095; end: 0.74 -0.44 0.32; color: #ff6b9b; opacity: 0.95"></a-entity>
 
-                <a-sphere
-                    id="hotspot-sol-karincik"
-                    class="hotspot"
-                    position="0.82 0.82 -0.92"
-                    radius="0.17"
-                    color="#68e8ff"
-                    opacity="0.88"
-                    data-baslik="Sol Karıncık"
-                    data-bilgi="Oksijence zengin kanı yüksek basınçla vücuda pompalar. Kalbin en güçlü pompa odacıklarından biridir ve sistemik dolaşımın merkezinde yer alır."
-                    animation__pulse="property: scale; to: 1.22 1.22 1.22; dir: alternate; dur: 850; loop: true; easing: easeInOutSine"
-                    animation__fade="property: opacity; to: 0.52; dir: alternate; dur: 850; loop: true; easing: easeInOutSine">
-                </a-sphere>
+          <!-- Dışarı taşınmış büyük dokunma küreleri -->
+          <a-sphere
+            id="hotspot-sol-karincik"
+            class="hotspot"
+            position="0.66 0.70 -0.68"
+            radius="0.16"
+            color="#67e8ff"
+            opacity="0.85"
+            data-baslik="Sol Karıncık"
+            data-bilgi="Oksijence zengin kanı vücuda pompalar. Kalbin en güçlü pompa odacıklarından biridir ve sistemik dolaşımın ana itici gücüdür."
+            animation="property: scale; to: 1.16 1.16 1.16; dir: alternate; dur: 900; loop: true; easing: easeInOutSine">
+          </a-sphere>
 
-                <a-sphere
-                    id="hotspot-sag-kulakcik"
-                    class="hotspot"
-                    position="0.98 -0.62 0.56"
-                    radius="0.17"
-                    color="#ff6b9b"
-                    opacity="0.88"
-                    data-baslik="Sağ Kulakçık"
-                    data-bilgi="Vücuttan dönen oksijence fakir kan ilk olarak burada toplanır. Sağ karıncığa kan aktararak akciğer dolaşımının başlamasını sağlar."
-                    animation__pulse="property: scale; to: 1.22 1.22 1.22; dir: alternate; dur: 850; loop: true; easing: easeInOutSine"
-                    animation__fade="property: opacity; to: 0.52; dir: alternate; dur: 850; loop: true; easing: easeInOutSine">
-                </a-sphere>
+          <a-sphere
+            id="hotspot-sag-kulakcik"
+            class="hotspot"
+            position="0.74 -0.44 0.32"
+            radius="0.16"
+            color="#ff6b9b"
+            opacity="0.85"
+            data-baslik="Sağ Kulakçık"
+            data-bilgi="Vücuttan dönen oksijence fakir kan burada toplanır. Kanı sağ karıncığa aktararak akciğer dolaşımının başlamasına yardımcı olur."
+            animation="property: scale; to: 1.16 1.16 1.16; dir: alternate; dur: 900; loop: true; easing: easeInOutSine">
+          </a-sphere>
+        </a-entity>
+      </a-marker>
 
-                <a-ring position="0.82 0.82 -0.92" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.24" color="#68e8ff" opacity="0.5"
-                    animation="property: rotation; to: -90 360 0; loop: true; dur: 7000; easing: linear"></a-ring>
-
-                <a-ring position="0.98 -0.62 0.56" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.24" color="#ff6b9b" opacity="0.5"
-                    animation="property: rotation; to: -90 360 0; loop: true; dur: 7000; easing: linear"></a-ring>
-            </a-entity>
-        </a-marker>
-
-        <a-entity camera></a-entity>
+      <a-entity camera></a-entity>
     </a-scene>
+  </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const sceneEl = document.getElementById("scene");
-            const markerEl = document.getElementById("markerA");
-            const infoBox = document.getElementById("infoBox");
-            const infoTitle = document.getElementById("infoTitle");
-            const infoText = document.getElementById("infoText");
-            const closeBtn = document.getElementById("closeBtn");
-            const statusBox = document.getElementById("statusBox");
-            const statusText = document.getElementById("statusText");
-            const debugLine = document.getElementById("debugLine");
-            const cameraEl = sceneEl.querySelector("[camera]");
-            const hotspotEls = Array.from(document.querySelectorAll(".hotspot"));
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const sceneEl = document.getElementById('scene');
+      const markerEl = document.getElementById('markerA');
+      const cameraEl = sceneEl.querySelector('[camera]');
+      const infoBox = document.getElementById('infoBox');
+      const infoTitle = document.getElementById('infoTitle');
+      const infoText = document.getElementById('infoText');
+      const closeBtn = document.getElementById('closeBtn');
+      const statusBox = document.getElementById('statusBox');
+      const statusText = document.getElementById('statusText');
+      const hintText = document.getElementById('hintText');
+      const hotspotEls = Array.from(document.querySelectorAll('.hotspot'));
 
-            let markerVisible = false;
-            let hideTimer = null;
-            let lastTouchTs = 0;
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const clickableRoots = [];
+      let markerVisible = false;
+      let modelLoaded = false;
+      let lastTouchTime = 0;
+      let hideTimer = null;
 
-            const raycaster = new THREE.Raycaster();
-            const pointer = new THREE.Vector2();
-            const clickableObjects = [];
+      function setStatus(mode, text) {
+        statusBox.className = 'status';
+        if (mode) statusBox.classList.add(mode);
+        statusText.textContent = text;
+      }
 
-            function updateStatus(type, text) {
-                statusBox.classList.remove("active", "camera");
-                if (type) statusBox.classList.add(type);
-                statusText.textContent = text;
-                debugLine.innerHTML = "<strong>Durum:</strong> " + text;
-            }
+      function showInfo(el) {
+        clearTimeout(hideTimer);
+        infoTitle.textContent = el.getAttribute('data-baslik') || 'Bilgi';
+        infoText.textContent = el.getAttribute('data-bilgi') || 'Bilgi bulunamadı.';
+        infoBox.classList.add('show');
+        hideTimer = setTimeout(hideInfo, 7000);
+      }
 
-            function openInfo(el) {
-                const title = el.getAttribute("data-baslik") || "Bilgi noktası";
-                const text = el.getAttribute("data-bilgi") || "Açıklama bulunamadı.";
+      function hideInfo() {
+        clearTimeout(hideTimer);
+        infoBox.classList.remove('show');
+      }
 
-                infoTitle.textContent = title;
-                infoText.textContent = text;
-                infoBox.classList.add("show");
-
-                clearTimeout(hideTimer);
-                hideTimer = setTimeout(() => {
-                    infoBox.classList.remove("show");
-                }, 7000);
-            }
-
-            function closeInfo() {
-                clearTimeout(hideTimer);
-                infoBox.classList.remove("show");
-            }
-
-            function tagHotspotTree(el) {
-                const root = el.object3D;
-                root.traverse((node) => {
-                    node.userData.hotspotEl = el;
-                });
-                clickableObjects.push(root);
-            }
-
-            function buildHotspots() {
-                clickableObjects.length = 0;
-                hotspotEls.forEach(tagHotspotTree);
-            }
-
-            function getCanvasRect() {
-                const canvas = sceneEl.canvas;
-                if (!canvas) return null;
-                return canvas.getBoundingClientRect();
-            }
-
-            function pickHotspot(clientX, clientY) {
-                if (!markerVisible || !sceneEl.canvas) return null;
-
-                const rect = getCanvasRect();
-                const camera = cameraEl.getObject3D("camera");
-                if (!rect || !camera) return null;
-
-                pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-                pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-
-                raycaster.setFromCamera(pointer, camera);
-                const intersections = raycaster.intersectObjects(clickableObjects, true);
-
-                if (!intersections.length) return null;
-
-                for (const hit of intersections) {
-                    if (hit.object && hit.object.userData && hit.object.userData.hotspotEl) {
-                        return hit.object.userData.hotspotEl;
-                    }
-                }
-                return null;
-            }
-
-            function onPointerActivate(clientX, clientY, target) {
-                if (target && (target.closest(".topbar") || target.closest(".info-box") || target.closest(".hint") || target.closest(".mini-legend") || target.closest(".debug-line"))) {
-                    return;
-                }
-
-                const hitEl = pickHotspot(clientX, clientY);
-                if (hitEl) {
-                    openInfo(hitEl);
-                } else if (markerVisible) {
-                    closeInfo();
-                }
-            }
-
-            closeBtn.addEventListener("click", closeInfo);
-            closeBtn.addEventListener("touchstart", function(e){
-                e.preventDefault();
-                e.stopPropagation();
-                closeInfo();
-            }, { passive: false });
-
-            window.addEventListener("touchend", function (e) {
-                if (!e.changedTouches || !e.changedTouches.length) return;
-                const touch = e.changedTouches[0];
-                lastTouchTs = Date.now();
-                onPointerActivate(touch.clientX, touch.clientY, e.target);
-            }, { passive: true });
-
-            window.addEventListener("click", function (e) {
-                if (Date.now() - lastTouchTs < 500) return;
-                onPointerActivate(e.clientX, e.clientY, e.target);
-            });
-
-            sceneEl.addEventListener("loaded", function () {
-                if (sceneEl.renderer) {
-                    sceneEl.renderer.setClearColor(0x000000, 0);
-                }
-                updateStatus("camera", "Kamera açıldı, marker bekleniyor");
-            });
-
-            markerEl.addEventListener("markerFound", function () {
-                markerVisible = true;
-                updateStatus("active", "Marker bulundu");
-            });
-
-            markerEl.addEventListener("markerLost", function () {
-                markerVisible = false;
-                updateStatus("camera", "Marker kayboldu, yeniden hizala");
-                closeInfo();
-            });
-
-            const cameraCheck = setInterval(function () {
-                const video = document.querySelector("video") || document.querySelector(".arjs-video");
-                if (video) {
-                    video.setAttribute("playsinline", "true");
-                    video.setAttribute("webkit-playsinline", "true");
-                    video.muted = true;
-                    video.style.display = "block";
-                    video.style.visibility = "visible";
-                    video.style.opacity = "1";
-                    updateStatus("camera", "Kamera akışı aktif, marker bekleniyor");
-                    clearInterval(cameraCheck);
-                }
-            }, 600);
-
-            const waitForModel = setInterval(function () {
-                if (sceneEl.hasLoaded && cameraEl.getObject3D("camera")) {
-                    buildHotspots();
-                    clearInterval(waitForModel);
-                }
-            }, 300);
-
-            setTimeout(function () {
-                if (!document.querySelector("video") && !document.querySelector(".arjs-video")) {
-                    updateStatus("", "Kamera izni verilmedi veya video açılamadı");
-                }
-            }, 7000);
+      function markClickable(el) {
+        const root = el.object3D;
+        root.traverse(function (node) {
+          node.userData.hotspotEl = el;
         });
-    </script>
+        clickableRoots.push(root);
+      }
+
+      function rebuildClickableList() {
+        clickableRoots.length = 0;
+        hotspotEls.forEach(markClickable);
+      }
+
+      function getCanvasRect() {
+        if (!sceneEl.canvas) return null;
+        return sceneEl.canvas.getBoundingClientRect();
+      }
+
+      function pickHotspot(clientX, clientY) {
+        if (!sceneEl.canvas || !markerVisible || !modelLoaded) return null;
+
+        const camera = cameraEl.getObject3D('camera');
+        const rect = getCanvasRect();
+        if (!camera || !rect) return null;
+
+        pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(clickableRoots, true);
+
+        for (const hit of hits) {
+          const el = hit.object && hit.object.userData ? hit.object.userData.hotspotEl : null;
+          if (el) return el;
+        }
+        return null;
+      }
+
+      function activateFromPoint(clientX, clientY, target) {
+        if (target && target.closest && target.closest('#infoBox')) return;
+        const picked = pickHotspot(clientX, clientY);
+        if (picked) {
+          showInfo(picked);
+        } else if (markerVisible) {
+          hideInfo();
+        }
+      }
+
+      closeBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        hideInfo();
+      });
+
+      closeBtn.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hideInfo();
+      }, { passive: false });
+
+      window.addEventListener('touchend', function (e) {
+        if (!e.changedTouches || !e.changedTouches.length) return;
+        const t = e.changedTouches[0];
+        lastTouchTime = Date.now();
+        activateFromPoint(t.clientX, t.clientY, e.target);
+      }, { passive: true });
+
+      window.addEventListener('click', function (e) {
+        if (Date.now() - lastTouchTime < 500) return;
+        activateFromPoint(e.clientX, e.clientY, e.target);
+      });
+
+      hotspotEls.forEach(function (el) {
+        el.addEventListener('loaded', rebuildClickableList);
+      });
+
+      const heartModel = document.getElementById('heartModel');
+      heartModel.addEventListener('model-loaded', function () {
+        modelLoaded = true;
+        hintText.textContent = 'Kalp yüklendi. Markerı sabit tut ve dışarıdaki büyük kürelere dokun.';
+      });
+
+      heartModel.addEventListener('model-error', function () {
+        hintText.textContent = 'kalp.glb yüklenemedi. Model dosyasının index.html ile aynı klasörde olduğundan emin ol.';
+      });
+
+      sceneEl.addEventListener('loaded', function () {
+        if (sceneEl.renderer) {
+          sceneEl.renderer.setClearColor(0x000000, 0);
+        }
+        setStatus('cam', 'Kamera açık');
+      });
+
+      markerEl.addEventListener('markerFound', function () {
+        markerVisible = true;
+        setStatus('ok', 'Marker bulundu');
+        hintText.textContent = 'Kalp görünmeli. Büyük kürelere dokunarak bilgi açabilirsin.';
+      });
+
+      markerEl.addEventListener('markerLost', function () {
+        markerVisible = false;
+        hideInfo();
+        setStatus('cam', 'Marker bekleniyor');
+        hintText.textContent = 'Marker kadrajdan çıktı. Hiro markerını yeniden kameraya göster.';
+      });
+
+      const videoProbe = setInterval(function () {
+        const video = document.querySelector('video') || document.querySelector('.arjs-video');
+        if (video) {
+          video.setAttribute('playsinline', 'true');
+          video.setAttribute('webkit-playsinline', 'true');
+          setStatus('cam', 'Kamera aktif');
+          clearInterval(videoProbe);
+        }
+      }, 500);
+
+      setTimeout(function () {
+        const video = document.querySelector('video') || document.querySelector('.arjs-video');
+        if (!video) {
+          setStatus('', 'Kamera açılamadı');
+          hintText.textContent = 'Kamera siyahsa veya açılmıyorsa siteyi HTTPS üzerinden ve tercihen mobil Chrome ile aç.';
+        }
+      }, 7000);
+    });
+  </script>
 </body>
 </html>
