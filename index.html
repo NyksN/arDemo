@@ -2,412 +2,110 @@
 <html lang="tr">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>WebAR Kalp - Güzelleştirilmiş Mobil Sürüm</title>
-
+    <title>WebAR Kalp - Mobil Sürüm</title>
+    
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
-        :root {
-            --bg-card: rgba(13, 18, 30, 0.78);
-            --bg-card-strong: rgba(10, 14, 24, 0.9);
-            --border: rgba(255, 255, 255, 0.12);
-            --text: #f5f7fb;
-            --muted: #b8c2d6;
-            --accent: #63e6ff;
-            --accent-2: #ff6b9a;
-            --success: #62f7a8;
-            --shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-        }
-
-        * { box-sizing: border-box; }
-
-        html, body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-            background: #000;
-            color: var(--text);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at top left, rgba(99,230,255,0.12), transparent 28%),
-                radial-gradient(circle at top right, rgba(255,107,154,0.12), transparent 30%),
-                linear-gradient(to bottom, rgba(0,0,0,0.22), transparent 22%, transparent 78%, rgba(0,0,0,0.3));
-            z-index: 1;
-        }
-
-        .hud {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .panel {
-            pointer-events: auto;
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-        }
-
-        .ust-kart {
-            position: fixed;
-            top: max(14px, env(safe-area-inset-top));
-            left: 50%;
-            transform: translateX(-50%);
-            width: min(92%, 420px);
-            border-radius: 18px;
-            padding: 14px 16px;
-        }
-
-        .ust-kart .satir {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .baslik-blok {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 0;
-        }
-
-        .icon-kalp {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            font-size: 20px;
-            background: linear-gradient(135deg, rgba(99,230,255,0.22), rgba(255,107,154,0.22));
-            border: 1px solid rgba(255,255,255,0.12);
-            flex: 0 0 auto;
-        }
-
-        .ust-kart h1 {
-            margin: 0;
-            font-size: 17px;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-        }
-
-        .ust-kart p {
-            margin: 4px 0 0;
-            font-size: 13px;
-            color: var(--muted);
-            line-height: 1.35;
-        }
-
-        .durum {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .durum-nokta {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: #ffd166;
-            box-shadow: 0 0 10px rgba(255, 209, 102, 0.65);
-            transition: background 0.25s ease, box-shadow 0.25s ease;
-        }
-
-        .durum.aktif .durum-nokta {
-            background: var(--success);
-            box-shadow: 0 0 12px rgba(98, 247, 168, 0.75);
-        }
-
-        .alt-ipucu {
-            position: fixed;
-            left: 50%;
-            bottom: calc(20px + env(safe-area-inset-bottom));
-            transform: translateX(-50%);
-            width: min(90%, 360px);
-            border-radius: 16px;
-            padding: 12px 14px;
-            text-align: center;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .alt-ipucu strong {
-            color: var(--text);
-            font-weight: 600;
-        }
-
+        body { margin: 0; overflow: hidden; }
+        
+        /* Mobilde parmak kapatmasın diye ekranın altına sabitlenmiş şık bilgi kutusu */
         #bilgi-kutusu {
             position: fixed;
+            bottom: 5%;
             left: 50%;
-            bottom: calc(82px + env(safe-area-inset-bottom));
-            transform: translateX(-50%) translateY(18px);
-            width: min(90%, 380px);
-            background: var(--bg-card-strong);
-            color: var(--text);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            padding: 16px 16px 14px;
-            z-index: 10;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-        }
-
-        #bilgi-kutusu.goster {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .bilgi-ust {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .bilgi-etiket {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--accent);
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-
-        .bilgi-baslik {
-            margin: 6px 0 0;
-            font-size: 20px;
-            font-weight: 800;
-            line-height: 1.15;
-        }
-
-        .bilgi-metin {
-            margin: 8px 0 0;
-            color: #dce5f5;
-            font-size: 14px;
-            line-height: 1.55;
-        }
-
-        .kapat-btn {
-            appearance: none;
-            border: 0;
-            width: 34px;
-            height: 34px;
+            transform: translateX(-50%);
+            background-color: rgba(15, 15, 15, 0.9);
+            color: #ffffff;
+            padding: 15px 20px;
             border-radius: 12px;
-            cursor: pointer;
-            color: white;
-            font-size: 18px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            flex: 0 0 auto;
-        }
-
-        .kapat-btn:active {
-            transform: scale(0.96);
-        }
-
-        .mini-rozetler {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        .rozet {
-            padding: 7px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        @media (max-width: 420px) {
-            .ust-kart { padding: 12px 13px; }
-            .ust-kart .satir { align-items: flex-start; }
-            .durum { margin-top: 2px; }
-            .bilgi-baslik { font-size: 18px; }
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            display: none;
+            z-index: 9999;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
+
 <body>
-    <div class="hud">
-        <div class="ust-kart panel">
-            <div class="satir">
-                <div class="baslik-blok">
-                    <div class="icon-kalp">🫀</div>
-                    <div>
-                        <h1>WebAR Kalp İncelemesi</h1>
-                        <p>Hiro markerını kameraya göster, parlayan bilgi noktalarına dokun ve organ bölümlerini keşfet.</p>
-                    </div>
-                </div>
-                <div class="durum" id="durum-kutu">
-                    <span class="durum-nokta"></span>
-                    <span id="durum-yazi">Marker aranıyor</span>
-                </div>
-            </div>
-        </div>
+    <div id="bilgi-kutusu"></div>
 
-        <div id="bilgi-kutusu">
-            <div class="bilgi-ust">
-                <div>
-                    <div class="bilgi-etiket">● Anatomi Bilgisi</div>
-                    <div class="bilgi-baslik" id="bilgi-baslik">Bölüm başlığı</div>
-                </div>
-                <button class="kapat-btn" id="kapat-btn" aria-label="Bilgiyi kapat">×</button>
-            </div>
-            <p class="bilgi-metin" id="bilgi-metin">Burada seçilen kalp bölümünün açıklaması yer alacak.</p>
-            <div class="mini-rozetler">
-                <span class="rozet">Dokunarak etkileşim</span>
-                <span class="rozet">Mobil uyumlu arayüz</span>
-            </div>
-        </div>
-
-        <div class="alt-ipucu panel">
-            <strong>İpucu:</strong> Küçük parlak kürelere dokun. Marker kaybolursa bilgi penceresi otomatik kapanır.
-        </div>
-    </div>
-
-    <a-scene
-        arjs="sourceType: webcam; debugUIEnabled: false;"
-        renderer="logarithmicDepthBuffer: true; antialias: true; colorManagement: true;"
-        vr-mode-ui="enabled: false"
-        gesture-detector
+    <a-scene 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        renderer="logarithmicDepthBuffer: true; antialias: true;" 
+        vr-mode-ui="enabled: false" 
+        gesture-detector 
         id="scene">
 
         <a-assets>
             <a-asset-item id="kalp-modeli" src="kalp.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro" emitevents="true" id="markerA">
+        <a-marker 
+            preset="hiro" 
+            raycaster="objects: .bilgi-noktasi" 
+            emitevents="true" 
+            cursor="fuse: false; rayOrigin: mouse;" 
+            id="markerA">
+            
             <a-entity position="0 0 0" scale="1 1 1" gesture-handler>
+                
                 <a-entity gltf-model="#kalp-modeli"></a-entity>
 
-                <a-sphere
-                    position="0.317 0.467 -0.386"
-                    radius="0.15"
-                    color="#63e6ff"
-                    opacity="0.9"
-                    class="bilgi-noktasi clickable"
-                    data-baslik="Sol Karıncık"
-                    data-bilgi="Oksijence zengin kanı güçlü bir şekilde vücuda pompalar. Kalbin en güçlü kas katmanlarından birine sahiptir."
-                    animation="property: scale; to: 1.28 1.28 1.28; dir: alternate; dur: 850; loop: true"
-                    animation__fade="property: opacity; to: 0.55; dir: alternate; dur: 850; loop: true">
+                <a-sphere 
+                    position="0.317 0.467 -0.386" 
+                    radius="0.15" 
+                    color="#00ffff"
+                    opacity="0.8" 
+                    class="bilgi-noktasi" 
+                    data-bilgi="<b>Sol Karıncık</b><br>Oksijence zengin kanı vücuda pompalar."
+                    animation="property: scale; to: 1.3 1.3 1.3; dir: alternate; dur: 800; loop: true">
                 </a-sphere>
 
-                <a-sphere
-                    position="0.425 -0.242 0.095"
-                    radius="0.15"
-                    color="#ff6b9a"
-                    opacity="0.9"
-                    class="bilgi-noktasi clickable"
-                    data-baslik="Sağ Kulakçık"
-                    data-bilgi="Vücuttan gelen oksijence fakir kanın toplandığı bölümdür. Kanı sağ karıncığa ileterek dolaşımın devamını sağlar."
-                    animation="property: scale; to: 1.28 1.28 1.28; dir: alternate; dur: 850; loop: true"
-                    animation__fade="property: opacity; to: 0.55; dir: alternate; dur: 850; loop: true">
+                <a-sphere 
+                    position="0.425 -0.242 0.095" 
+                    radius="0.15" 
+                    color="#ff3366"
+                    opacity="0.8" 
+                    class="bilgi-noktasi" 
+                    data-bilgi="<b>Sağ Kulakçık</b><br>Vücuttan gelen kirli kanın toplandığı yerdir."
+                    animation="property: scale; to: 1.3 1.3 1.3; dir: alternate; dur: 800; loop: true">
                 </a-sphere>
+
             </a-entity>
         </a-marker>
 
-        <a-entity
-            camera
-            cursor="rayOrigin: mouse"
-            raycaster="objects: .clickable; far: 100">
-        </a-entity>
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const marker = document.getElementById("markerA");
-            const durumKutu = document.getElementById("durum-kutu");
-            const durumYazi = document.getElementById("durum-yazi");
+        document.addEventListener("DOMContentLoaded", function() {
             const bilgiKutusu = document.getElementById("bilgi-kutusu");
-            const bilgiBaslik = document.getElementById("bilgi-baslik");
-            const bilgiMetin = document.getElementById("bilgi-metin");
-            const kapatBtn = document.getElementById("kapat-btn");
-            const noktalar = document.querySelectorAll(".bilgi-noktasi");
+            const scene = document.querySelector('a-scene');
             let zamanlayici;
 
-            function bilgiAc(baslik, metin) {
-                bilgiBaslik.textContent = baslik;
-                bilgiMetin.textContent = metin;
-                bilgiKutusu.classList.add("goster");
+            // Dokunma olaylarını dinle
+            scene.addEventListener('click', function (evt) {
+                if (evt.detail.intersectedEl && evt.detail.intersectedEl.classList.contains('bilgi-noktasi')) {
+                    const metin = evt.detail.intersectedEl.getAttribute("data-bilgi");
+                    
+                    bilgiKutusu.innerHTML = metin;
+                    bilgiKutusu.style.display = "block";
 
-                clearTimeout(zamanlayici);
-                zamanlayici = setTimeout(() => {
-                    bilgiKutusu.classList.remove("goster");
-                }, 5500);
-            }
-
-            function bilgiKapat() {
-                clearTimeout(zamanlayici);
-                bilgiKutusu.classList.remove("goster");
-            }
-
-            function secimOlayi(nokta) {
-                const baslik = nokta.getAttribute("data-baslik") || "Bilgi Noktası";
-                const metin = nokta.getAttribute("data-bilgi") || "Açıklama bulunamadı.";
-                bilgiAc(baslik, metin);
-            }
-
-            noktalar.forEach((nokta) => {
-                nokta.addEventListener("click", function (e) {
-                    if (e) e.stopPropagation();
-                    secimOlayi(this);
-                });
-
-                nokta.addEventListener("touchstart", function (e) {
-                    if (e) {
-                        e.stopPropagation();
-                        e.preventDefault();
-                    }
-                    secimOlayi(this);
-                }, { passive: false });
-            });
-
-            kapatBtn.addEventListener("click", bilgiKapat);
-            kapatBtn.addEventListener("touchstart", function (e) {
-                e.preventDefault();
-                bilgiKapat();
-            }, { passive: false });
-
-            marker.addEventListener("markerFound", function () {
-                durumKutu.classList.add("aktif");
-                durumYazi.textContent = "Marker bulundu";
-            });
-
-            marker.addEventListener("markerLost", function () {
-                durumKutu.classList.remove("aktif");
-                durumYazi.textContent = "Marker aranıyor";
-                bilgiKapat();
+                    clearTimeout(zamanlayici);
+                    zamanlayici = setTimeout(function() {
+                        bilgiKutusu.style.display = "none";
+                    }, 4000);
+                } else {
+                    bilgiKutusu.style.display = "none";
+                }
             });
         });
     </script>
