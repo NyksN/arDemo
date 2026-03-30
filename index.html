@@ -3,231 +3,363 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR Kalp Anatomisi — 3D Eğitim</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- A-Frame & AR.js FIRST -->
+  <title>AR Kalp Anatomisi v3 — 3D Eğitim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <style>
-    :root{--red:#e63946;--red-d:rgba(230,57,70,.14);--blue:#4895ef;--purple:#9b5de5;--amber:#f4a261;--green:#06d6a0;--text:#f1faee;--muted:rgba(241,250,238,.55);--surf:rgba(12,8,24,.92)}
+    :root{--red:#e63946;--red2:#c1121f;--red-d:rgba(230,57,70,.13);--blue:#4895ef;--purple:#9b5de5;--amber:#f4a261;--green:#06d6a0;--cyan:#00b4d8;--text:#f1faee;--muted:rgba(241,250,238,.5);--surf:rgba(10,6,20,.93);--glass:rgba(10,6,20,.72)}
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     body{overflow:hidden;height:100dvh;font-family:'DM Sans',sans-serif;background:#000;color:var(--text)}
 
-    #splash{position:fixed;inset:0;z-index:9000;background:linear-gradient(165deg,#080510,#130d22 45%,#1a0f2e);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;transition:opacity .6s}
-    #splash.out{opacity:0;pointer-events:none}
-    #splash .ey{font-family:'Outfit';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--red);margin-bottom:12px;opacity:.85}
-    #splash h1{font-family:'Outfit';font-size:28px;font-weight:900;line-height:1.15;margin-bottom:8px;background:linear-gradient(135deg,#f1faee,#e63946);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    #splash .sub{font-size:13px;color:var(--muted);margin-bottom:30px;line-height:1.6}
+    #splash{position:fixed;inset:0;z-index:9000;background:linear-gradient(165deg,#06020e,#110a1f 40%,#1a0c2c);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;transition:opacity .7s,transform .7s}
+    #splash.out{opacity:0;transform:scale(1.05);pointer-events:none}
+    #splash .ver{font-family:'Outfit';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:4px;color:var(--cyan);margin-bottom:6px;opacity:.6}
+    #splash .ey{font-family:'Outfit';font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--red);margin-bottom:14px;opacity:.85}
+    #splash h1{font-family:'Outfit';font-size:30px;font-weight:900;line-height:1.12;margin-bottom:6px;background:linear-gradient(135deg,#f1faee 30%,#e63946);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    #splash .sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6}
     .steps{width:100%;max-width:330px}
-    .stp{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:13px 16px;border-radius:14px;margin-bottom:8px;text-align:left}
-    .stp .n{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:var(--red-d);color:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:14px}
-    .stp p{font-size:12.5px;line-height:1.5;color:var(--muted)}
-    #go{margin-top:22px;padding:15px 50px;border:none;border-radius:40px;background:linear-gradient(135deg,var(--red),#c1121f);color:#fff;font-family:'Outfit';font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 28px rgba(230,57,70,.4)}
-    #go:active{transform:scale(.96)}
-    .dl{margin-top:14px;color:var(--blue);font-size:11px;text-decoration:underline;opacity:.7}
+    .stp{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);padding:12px 16px;border-radius:14px;margin-bottom:7px;text-align:left}
+    .stp .n{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:var(--red-d);color:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Outfit';font-weight:800;font-size:13px}
+    .stp p{font-size:12px;line-height:1.5;color:var(--muted)}
+    #go{margin-top:22px;padding:15px 52px;border:none;border-radius:40px;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-family:'Outfit';font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 30px rgba(230,57,70,.4),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .15s}
+    #go:active{transform:scale(.95)}
+    .dl{margin-top:14px;color:var(--blue);font-size:11px;text-decoration:underline;opacity:.65}
 
-    #hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--surf);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 16px;display:none;align-items:center;gap:12px}
-    #hdr .ic{width:36px;height:36px;border-radius:11px;background:var(--red-d);display:flex;align-items:center;justify-content:center;font-size:19px}
-    #hdr h2{font-family:'Outfit';font-size:14.5px;font-weight:700}
-    #hdr small{font-size:10px;color:var(--muted);display:block;margin-top:1px}
+    #hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--surf);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.05);padding:10px 16px;display:none;align-items:center;gap:11px}
+    #hdr .ic{width:34px;height:34px;border-radius:10px;background:var(--red-d);display:flex;align-items:center;justify-content:center;font-size:18px}
+    #hdr h2{font-family:'Outfit';font-size:14px;font-weight:700}
+    #hdr small{font-size:9.5px;color:var(--muted);display:block;margin-top:1px}
+    #hdr .v2{font-size:8px;font-weight:700;color:var(--cyan);background:rgba(0,180,216,.12);padding:2px 6px;border-radius:8px;margin-left:6px;letter-spacing:.5px}
 
-    #status{position:fixed;top:66px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surf);backdrop-filter:blur(12px);padding:7px 16px;border-radius:22px;font-size:11px;font-weight:600;display:none;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.06)}
+    #status{position:fixed;top:62px;left:50%;transform:translateX(-50%);z-index:200;background:var(--glass);backdrop-filter:blur(14px);padding:6px 16px;border-radius:22px;font-size:11px;font-weight:600;display:none;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.06);transition:all .3s}
     #status .led{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:bl 1.4s infinite}
     #status.ok .led{background:var(--green);animation:none}
-    @keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+    @keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}
 
-    #panel{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surf);backdrop-filter:blur(24px);border-top:1.5px solid rgba(230,57,70,.3);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);max-height:52vh;overflow-y:auto}
+    #mode-bar{position:fixed;top:94px;left:50%;transform:translateX(-50%);z-index:200;display:none;gap:4px;background:var(--glass);backdrop-filter:blur(14px);padding:3px;border-radius:16px;border:1px solid rgba(255,255,255,.06)}
+    .mbtn{padding:5px 14px;border-radius:13px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:600;font-family:'DM Sans';cursor:pointer;transition:all .2s}
+    .mbtn.active{background:var(--red-d);color:var(--red)}
+
+    #panel{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surf);backdrop-filter:blur(28px);border-top:1.5px solid rgba(230,57,70,.25);border-radius:24px 24px 0 0;transform:translateY(100%);transition:transform .5s cubic-bezier(.16,1,.3,1);max-height:54vh;overflow-y:auto}
     #panel.open{transform:translateY(0)}
-    .ph{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;border-bottom:1px solid rgba(255,255,255,.05)}
-    .ph h3{font-family:'Outfit';font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .ph .tag{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
-    #pcl{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-    .pb{padding:12px 18px 24px}
-    .row3{display:flex;gap:7px;margin-bottom:12px}
-    .cell{flex:1;background:rgba(255,255,255,.04);border-radius:11px;padding:10px;text-align:center;border:1px solid rgba(255,255,255,.04)}
-    .cell .v{font-family:'Outfit';font-size:16px;font-weight:800;margin-bottom:2px}
-    .cell .l{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-    .desc{font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:12px}
-    .ff{background:linear-gradient(135deg,var(--red-d),rgba(155,93,229,.1));border:1px solid rgba(230,57,70,.15);border-radius:13px;padding:12px 14px;font-size:12px;line-height:1.6}
+    .ph{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .ph h3{font-family:'Outfit';font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .ph .tag{font-size:8.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.6px}
+    #pcl{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .pb{padding:10px 18px 26px}
+    .row3{display:flex;gap:6px;margin-bottom:12px}
+    .cell{flex:1;background:rgba(255,255,255,.035);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid rgba(255,255,255,.04)}
+    .cell .v{font-family:'Outfit';font-size:17px;font-weight:800;margin-bottom:1px}
+    .cell .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+    .desc{font-size:13px;line-height:1.75;color:var(--muted);margin-bottom:12px}
+    .ff{background:linear-gradient(135deg,var(--red-d),rgba(155,93,229,.08));border:1px solid rgba(230,57,70,.12);border-radius:14px;padding:12px 15px;font-size:12px;line-height:1.65}
     .ff b{color:var(--red)}
 
-    #hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surf);backdrop-filter:blur(10px);padding:8px 18px;border-radius:20px;font-size:11px;font-weight:500;display:none;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.06);color:var(--muted)}
+    #hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;background:var(--glass);backdrop-filter:blur(12px);padding:8px 20px;border-radius:20px;font-size:11px;font-weight:500;display:none;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.06);color:var(--muted);animation:fadeUp .5s ease-out}
+    @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-    .pin-label{position:fixed;z-index:90;pointer-events:auto;cursor:pointer;display:none;flex-direction:column;align-items:center;gap:2px}
-    .pin-label .dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px currentColor;animation:pingDot 2s ease-out infinite}
-    .pin-label .dot-inner{width:8px;height:8px;border-radius:50%;background:currentColor}
-    @keyframes pingDot{0%{box-shadow:0 0 12px currentColor,0 0 0 0 currentColor}70%{box-shadow:0 0 12px currentColor,0 0 0 10px transparent}100%{box-shadow:0 0 12px currentColor,0 0 0 0 transparent}}
-    .pin-label span{font-family:'Outfit';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9);white-space:nowrap}
+    /* PINS — use transform for GPU acceleration, no left/top reflow */
+    .pin{position:fixed;left:0;top:0;z-index:90;pointer-events:auto;cursor:pointer;display:none;flex-direction:column;align-items:center;gap:3px;will-change:transform;transition:opacity .3s}
+    .pin:active{transform:scale(.88)!important}
+    .pin .ring{width:24px;height:24px;border-radius:50%;border:2.5px solid currentColor;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);box-shadow:0 0 14px currentColor,inset 0 0 6px rgba(255,255,255,.08);animation:pP 2.2s ease-out infinite}
+    .pin .core{width:8px;height:8px;border-radius:50%;background:currentColor}
+    @keyframes pP{0%{box-shadow:0 0 14px currentColor,0 0 0 0 currentColor}70%{box-shadow:0 0 14px currentColor,0 0 0 12px transparent}100%{box-shadow:0 0 14px currentColor,0 0 0 0 transparent}}
+    .pin span{font-family:'Outfit';font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.95),0 0 3px rgba(0,0,0,.8);white-space:nowrap;background:rgba(0,0,0,.4);padding:1px 6px;border-radius:6px;backdrop-filter:blur(4px)}
+    .pin.selected .ring{border-width:3px;box-shadow:0 0 20px currentColor,0 0 40px currentColor}
+
+    #found-flash{position:fixed;inset:0;z-index:150;pointer-events:none;background:radial-gradient(circle at center,rgba(230,57,70,.15),transparent 70%);opacity:0;transition:opacity .4s}
+    #found-flash.show{opacity:1}
   </style>
 
-  <!-- =====================================================
-       COMPONENT REGISTRATION — MUST be in <head> AFTER
-       A-Frame loads but BEFORE <a-scene> is parsed in body
-       Uses A-Frame's built-in THREE (no extra import)
-       ===================================================== -->
   <script>
+  // ====== DATA ======
   var DATA={
     aort:{i:'🔴',t:'Aort Damarı',tag:'Ana Arter',tc:'#e63946',
-      s:[{v:'2.5 cm',l:'Çap'},{v:'30-40 cm',l:'Uzunluk'},{v:'5 L/dk',l:'Kan Akışı'}],
-      d:'Aort, vücudumuzun en büyük atardamarıdır. Sol ventrikülden çıkarak yukarı kıvrılır ve tüm vücuda oksijenli kan taşır. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur.',
-      f:'<b>💡 Biliyor muydun?</b> Kalp her attığında aorttan geçen kan 1 metre yüksekliğe fışkırabilir!',
-      pos:{x:0,y:1.5,z:0}},
+      s:[{v:'2.5 cm',l:'Çap'},{v:'30–40 cm',l:'Uzunluk'},{v:'5 L/dk',l:'Kan Akışı'}],
+      d:'Aort, vücudumuzun en büyük atardamarıdır. Sol ventrikülden çıkarak yukarı kıvrılır (aort yayı) ve tüm vücuda oksijenli kan taşır. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur. Aort kapağı kanın geri akmasını engeller.',
+      f:'<b>💡 Biliyor muydun?</b> Kalp her attığında aorttan geçen kan 1 metre yüksekliğe fışkırabilir! Duvarları ~2mm kalınlığında elastik dokudan oluşur.',
+      pos:{x:0.05,y:1.55,z:0}},
     pulmoner:{i:'🔵',t:'Pulmoner Arter',tag:'Akciğer Arteri',tc:'#4895ef',
       s:[{v:'2 cm',l:'Çap'},{v:'~5 cm',l:'Uzunluk'},{v:'25 mmHg',l:'Basınç'}],
       d:'Sağ ventrikülden çıkarak oksijensiz kanı akciğerlere taşır. Vücuttaki tek oksijensiz kan taşıyan arterdir.',
       f:'<b>💡 Biliyor muydun?</b> Pulmoner arter vücuttaki tek "mavi kan" taşıyan arterdir!',
-      pos:{x:-0.6,y:1.2,z:0.2}},
+      pos:{x:-0.55,y:1.25,z:0.2}},
     sol_atriyum:{i:'🟡',t:'Sol Atriyum',tag:'Üst Sol Odacık',tc:'#f4a261',
       s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'4 Ven',l:'Bağlantı'}],
       d:'Akciğerlerden gelen oksijenli kanı 4 pulmoner ven ile toplar. Mitral kapak ile sol ventriküle aktarır.',
-      f:'<b>💡 Biliyor muydun?</b> Buradaki düzensiz sinyaller en yaygın ritim bozukluğu "atriyal fibrilasyon"a neden olur.',
-      pos:{x:-0.3,y:0.9,z:0}},
+      f:'<b>💡 Biliyor muydun?</b> Buradaki düzensiz sinyaller "atriyal fibrilasyon"a neden olur.',
+      pos:{x:-0.32,y:0.92,z:-0.05}},
     sag_atriyum:{i:'🟠',t:'Sağ Atriyum',tag:'Üst Sağ Odacık',tc:'#e9c46a',
       s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'SA Düğüm',l:'Kalp Pili'}],
-      d:'Vücuttan dönen oksijensiz kanı vena kavalar ile toplar. Kalbin doğal pili SA düğüm burada bulunur.',
-      f:'<b>💡 Biliyor muydun?</b> SA düğüm dakikada 60-100 sinyal üreterek kalbinizi çalıştırır!',
-      pos:{x:0.45,y:0.85,z:0.05}},
+      d:'Vücuttan dönen oksijensiz kanı vena kavalar ile toplar. SA düğüm burada bulunur.',
+      f:'<b>💡 Biliyor muydun?</b> SA düğüm dakikada 60–100 sinyal üreterek kalbinizi çalıştırır!',
+      pos:{x:0.48,y:0.88,z:0.06}},
     sol_ventrikul:{i:'🟣',t:'Sol Ventrikül',tag:'Alt Sol Odacık',tc:'#9b5de5',
-      s:[{v:'120 mL',l:'Hacim'},{v:'120 mmHg',l:'Basınç'},{v:'12-15 mm',l:'Duvar'}],
+      s:[{v:'120 mL',l:'Hacim'},{v:'120 mmHg',l:'Basınç'},{v:'12–15 mm',l:'Duvar'}],
       d:'Kalbin en güçlü odacığı. Oksijenli kanı aort ile tüm vücuda pompalar. Duvarları 3 kat daha kalın.',
       f:'<b>💡 Biliyor muydun?</b> Günde ~7.500 litre kan pompalar!',
-      pos:{x:-0.15,y:-0.1,z:0.3}},
+      pos:{x:-0.15,y:-0.1,z:0.35}},
     sag_ventrikul:{i:'🔵',t:'Sağ Ventrikül',tag:'Alt Sağ Odacık',tc:'#4895ef',
-      s:[{v:'85 mL',l:'Hacim'},{v:'25 mmHg',l:'Basınç'},{v:'3-5 mm',l:'Duvar'}],
-      d:'Oksijensiz kanı pulmoner arter ile akciğerlere pompalar. İnce duvarlıdır çünkü akciğerler yakın.',
-      f:'<b>💡 Biliyor muydun?</b> Sol ventriküle göre 6 kat az basınçla ama aynı miktarda kan pompalar!',
-      pos:{x:0.4,y:-0.05,z:0.25}},
+      s:[{v:'85 mL',l:'Hacim'},{v:'25 mmHg',l:'Basınç'},{v:'3–5 mm',l:'Duvar'}],
+      d:'Oksijensiz kanı pulmoner arter ile akciğerlere pompalar. İnce duvarlıdır.',
+      f:'<b>💡 Biliyor muydun?</b> 6 kat az basınçla aynı miktarda kan pompalar!',
+      pos:{x:0.42,y:-0.05,z:0.28}},
     koroner:{i:'💛',t:'Koroner Arterler',tag:'Kalbi Besleyen',tc:'#fbbf24',
-      s:[{v:'2-4 mm',l:'Çap'},{v:'%5',l:'Debi Payı'},{v:'2 Ana Dal',l:'Sağ & Sol'}],
+      s:[{v:'2–4 mm',l:'Çap'},{v:'%5',l:'Debi Payı'},{v:'2 Ana Dal',l:'Sağ & Sol'}],
       d:'Kalp kasını besleyen damarlar. Aortun çıkışından dallanarak kalbi taç gibi sararlar.',
-      f:'<b>💡 Biliyor muydun?</b> Sadece 2-4mm çapında ama kalbin tüm oksijenini sağlar. Tıkanması = kalp krizi!',
-      pos:{x:0.05,y:0.4,z:0.55}}
+      f:'<b>💡 Biliyor muydun?</b> Sadece 2–4mm çapında ama kalbin tüm oksijenini sağlar!',
+      pos:{x:0.08,y:0.42,z:0.58}}
   };
 
-  var heartObj=null, markerVisible=false, hbPhase=0, pinEls={};
+  // ====== STATE ======
+  var heartObj=null,spinGroup=null; // spinGroup = inner rotation, heartObj = outer (marker-tracked)
+  var markerVisible=false,markerReallyVisible=false;
+  var hbPhase=0,pinEls={},autoRotate=true,selectedPart=null;
+  var lostTimer=null; // Grace period timer
+  var GRACE_MS=1500; // 1.5s grace before hiding
+  var pinSmooth={}; // {key: {sx,sy}} — smoothed screen positions
+  var PIN_LERP=0.25; // Pin smoothing factor (0=frozen, 1=instant)
+  var everFound=false; // Track if marker was ever found
 
+  // ====== HEART BUILDER (same as v2) ======
   function buildHeart(g){
-    function mt(c,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r||.5,metalness:m||.08})}
-    function tb(p,r,m,s){var c=new THREE.CatmullRomCurve3(p);return new THREE.Mesh(new THREE.TubeGeometry(c,s||30,r,12,false),m)}
-    var bL=mt(0xb91c1c,.5,.08),bR=mt(0x8b1a1a,.55,.06),aM=mt(0xef4444,.35,.15),vM=mt(0x3b82f6,.4,.12),vD=mt(0x1e40af,.45,.1),cM=mt(0xfbbf24,.3,.2),gM=mt(0x3d0c0c,.7,.02),vlM=mt(0xffb4b4,.5,.05);
+    function mt(c,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r===undefined?.5:r,metalness:m===undefined?.08:m})}
+    function tb(p,r,m,s){var c=new THREE.CatmullRomCurve3(p);return new THREE.Mesh(new THREE.TubeGeometry(c,s||30,r,14,false),m)}
+    var V=THREE.Vector3;
+    var bL=mt(0xb91c1c,.48,.1),bR=mt(0x8b1a1a,.52,.08),bLd=mt(0xd42f2f,.42,.12);
+    var aM=mt(0xef4444,.32,.18),aMi=mt(0xff9999,.28,.06);
+    var vM=mt(0x3b82f6,.38,.14),vD=mt(0x1e40af,.42,.12),pvM=mt(0x9b59b6,.42,.1);
+    var cM=mt(0xfbbf24,.28,.22),gM=mt(0x3d0c0c,.7,.03),vlM=mt(0xffb4b4,.45,.06),fatM=mt(0xe8c26a,.65,.03);
+    var fiberM=mt(0x6b1515,.7,.03);
 
     // Sol Ventrikül
-    var a=new THREE.SphereGeometry(1,48,48);a.scale(.78,1.15,.72);g.add(new THREE.Mesh(a,bL).translateX(-.12).translateY(-.12));
-    var b=new THREE.SphereGeometry(.97,32,32);b.scale(.72,1.08,.74);var bm=new THREE.Mesh(b,mt(0xd42f2f,.45,.1));bm.position.set(-.15,-.05,.08);g.add(bm);
+    var a=new THREE.SphereGeometry(1,52,52);a.scale(.78,1.15,.72);g.add(new THREE.Mesh(a,bL).translateX(-.12).translateY(-.12));
+    var b=new THREE.SphereGeometry(.96,36,36);b.scale(.71,1.07,.73);var bm=new THREE.Mesh(b,bLd);bm.position.set(-.16,-.04,.1);g.add(bm);
     // Sağ Ventrikül
-    var c=new THREE.SphereGeometry(.88,44,44);c.scale(.68,1,.66);var cm=new THREE.Mesh(c,bR);cm.position.set(.38,-.08,.14);g.add(cm);
+    var c2=new THREE.SphereGeometry(.88,48,48);c2.scale(.68,1,.66);g.add(new THREE.Mesh(c2,bR).translateX(.38).translateY(-.08).translateZ(.14));
+    var rv2=new THREE.SphereGeometry(.55,28,28);rv2.scale(.5,.8,.55);var rvm=new THREE.Mesh(rv2,mt(0x991b1b,.5,.07));rvm.position.set(.55,-.15,.28);g.add(rvm);
     // Sol Atriyum
-    var d=new THREE.SphereGeometry(.52,36,36);d.scale(.72,.58,.62);var dm=new THREE.Mesh(d,mt(0xa91c1c,.48,.08));dm.position.set(-.28,.88,-.05);g.add(dm);
-    var e=new THREE.SphereGeometry(.22,20,20);e.scale(1.2,.8,.7);var em=new THREE.Mesh(e,mt(0xc0392b,.45,.1));em.position.set(-.6,.95,.15);g.add(em);
+    var d=new THREE.SphereGeometry(.52,40,40);d.scale(.73,.58,.63);g.add(new THREE.Mesh(d,mt(0xa91c1c,.46,.1)).translateX(-.28).translateY(.88).translateZ(-.05));
+    var e=new THREE.SphereGeometry(.24,24,24);e.scale(1.3,.75,.65);g.add(new THREE.Mesh(e,mt(0xc0392b,.43,.12)).translateX(-.62).translateY(.98).translateZ(.18));
     // Sağ Atriyum
-    var f=new THREE.SphereGeometry(.52,36,36);f.scale(.68,.58,.62);var fm=new THREE.Mesh(f,mt(0x7f1d1d,.5,.06));fm.position.set(.42,.82,.06);g.add(fm);
-    var h=new THREE.SphereGeometry(.2,20,20);h.scale(1.1,.75,.7);var hm=new THREE.Mesh(h,mt(0x991b1b,.48,.08));hm.position.set(.72,.88,.2);g.add(hm);
+    var f=new THREE.SphereGeometry(.52,40,40);f.scale(.69,.58,.63);g.add(new THREE.Mesh(f,mt(0x7f1d1d,.48,.08)).translateX(.42).translateY(.82).translateZ(.06));
+    var h=new THREE.SphereGeometry(.22,22,22);h.scale(1.15,.72,.65);g.add(new THREE.Mesh(h,mt(0x991b1b,.46,.1)).translateX(.74).translateY(.92).translateZ(.22));
     // Apex
-    var ap=new THREE.Mesh(new THREE.ConeGeometry(.48,.75,32),bL);ap.position.set(.08,-1.18,0);ap.rotation.z=.15;g.add(ap);
+    var ap=new THREE.Mesh(new THREE.ConeGeometry(.48,.8,36),bL);ap.position.set(.08,-1.2,0);ap.rotation.z=.15;g.add(ap);
+    // Yağ doku
+    var fat1=new THREE.SphereGeometry(.35,20,20);fat1.scale(1.8,.3,.8);g.add(new THREE.Mesh(fat1,fatM).translateX(.1).translateY(.55).translateZ(.5));
+    var fat2=new THREE.SphereGeometry(.25,16,16);fat2.scale(1.5,.25,.7);g.add(new THREE.Mesh(fat2,fatM).translateX(-.3).translateY(.6).translateZ(.35));
     // Aort
-    g.add(tb([new THREE.Vector3(-.02,.82,0),new THREE.Vector3(-.02,1.2,0),new THREE.Vector3(.08,1.55,-.05),new THREE.Vector3(.3,1.78,-.12),new THREE.Vector3(.58,1.8,-.16),new THREE.Vector3(.82,1.6,-.2),new THREE.Vector3(.88,1.2,-.25),new THREE.Vector3(.85,.8,-.3)],.14,aM,50));
-    g.add(tb([new THREE.Vector3(0,.85,0),new THREE.Vector3(0,1.22,0),new THREE.Vector3(.1,1.52,-.04),new THREE.Vector3(.28,1.72,-.1)],.06,mt(0xff9999,.3,.05),24));
-    [[new THREE.Vector3(.18,1.72,-.08),new THREE.Vector3(.18,2.15,-.02)],[new THREE.Vector3(.38,1.79,-.1),new THREE.Vector3(.42,2.18,-.05)],[new THREE.Vector3(.58,1.78,-.14),new THREE.Vector3(.68,2.08,-.08)]].forEach(function(p,i){g.add(tb(p,.05-i*.005,aM,14))});
+    g.add(tb([new V(-.02,.82,0),new V(-.02,1.22,0),new V(.06,1.5,-.03),new V(.2,1.72,-.1),new V(.42,1.82,-.14),new V(.62,1.8,-.17),new V(.82,1.6,-.22),new V(.9,1.25,-.27),new V(.87,.85,-.32)],.145,aM,60));
+    g.add(tb([new V(0,.86,0),new V(0,1.24,0),new V(.08,1.48,-.02),new V(.22,1.68,-.08)],.055,aMi,28));
+    g.add(tb([new V(.22,1.74,-.09),new V(.22,2.2,-.02)],.052,aM,16));
+    g.add(tb([new V(.38,1.82,-.12),new V(.4,2.22,-.04)],.046,aM,16));
+    g.add(tb([new V(.56,1.8,-.15),new V(.62,2.15,-.06)],.042,aM,16));
+    g.add(tb([new V(.22,2.1,-.03),new V(.12,2.35,.02)],.028,aM,10));
+    g.add(tb([new V(.22,2.08,-.04),new V(.32,2.3,-.01)],.025,aM,10));
     // Pulmoner
-    g.add(tb([new THREE.Vector3(.18,.78,.18),new THREE.Vector3(-.05,1.1,.28),new THREE.Vector3(-.35,1.35,.24),new THREE.Vector3(-.65,1.42,.18),new THREE.Vector3(-.85,1.38,.12)],.11,vM,40));
-    g.add(tb([new THREE.Vector3(-.65,1.4,.17),new THREE.Vector3(-.88,1.65,.08)],.055,vM,12));
-    g.add(tb([new THREE.Vector3(-.7,1.38,.16),new THREE.Vector3(-.75,1.7,.28)],.05,vM,12));
+    g.add(tb([new V(.18,.78,.2),new V(.02,1.05,.3),new V(-.2,1.25,.28),new V(-.45,1.38,.22),new V(-.68,1.42,.16),new V(-.88,1.36,.1)],.115,vM,48));
+    g.add(tb([new V(-.68,1.41,.15),new V(-.9,1.68,.06)],.058,vM,14));
+    g.add(tb([new V(-.72,1.39,.14),new V(-.78,1.72,.26)],.052,vM,14));
+    g.add(tb([new V(.16,.76,.2),new V(.12,.85,.24)],.13,vM,8));
     // Vena Kava
-    g.add(tb([new THREE.Vector3(.52,.88,0),new THREE.Vector3(.62,1.3,-.05),new THREE.Vector3(.58,1.85,-.1)],.09,vD,24));
-    g.add(tb([new THREE.Vector3(.52,.62,.05),new THREE.Vector3(.62,.1,.1),new THREE.Vector3(.58,-.45,.15)],.085,vD,24));
+    g.add(tb([new V(.54,.9,-.02),new V(.6,1.2,-.06),new V(.62,1.55,-.08),new V(.58,1.9,-.1)],.095,vD,28));
+    g.add(tb([new V(.54,.6,.06),new V(.6,.25,.1),new V(.62,-.1,.14),new V(.58,-.5,.16)],.088,vD,28));
     // Pulmoner Venler
-    [[new THREE.Vector3(-.38,.92,-.3),new THREE.Vector3(-.78,1.22,-.52)],[new THREE.Vector3(-.32,.82,-.35),new THREE.Vector3(-.82,.92,-.62)],[new THREE.Vector3(-.42,.98,-.2),new THREE.Vector3(-.9,1.3,-.35)],[new THREE.Vector3(-.35,.78,-.25),new THREE.Vector3(-.85,.7,-.48)]].forEach(function(p){g.add(tb(p,.04,mt(0x9b59b6,.45,.08),12))});
+    [[new V(-.4,.94,-.28),new V(-.72,1.15,-.48),new V(-.88,1.28,-.55)],[new V(-.35,.84,-.32),new V(-.7,.88,-.55),new V(-.88,.85,-.65)],[new V(-.42,1.0,-.18),new V(-.78,1.2,-.3),new V(-.95,1.35,-.38)],[new V(-.36,.78,-.24),new V(-.75,.68,-.42),new V(-.9,.6,-.52)]].forEach(function(p){g.add(tb(p,.042,pvM,16))});
     // Koroner
-    g.add(tb([new THREE.Vector3(-.02,.62,.58),new THREE.Vector3(-.25,.25,.65),new THREE.Vector3(-.38,-.15,.55),new THREE.Vector3(-.3,-.6,.42),new THREE.Vector3(-.2,-.9,.3)],.03,cM,36));
-    g.add(tb([new THREE.Vector3(.12,.62,.55),new THREE.Vector3(.38,.25,.58),new THREE.Vector3(.45,-.15,.48),new THREE.Vector3(.38,-.55,.35),new THREE.Vector3(.28,-.85,.25)],.028,cM,36));
-    g.add(tb([new THREE.Vector3(-.22,.2,.62),new THREE.Vector3(-.5,.05,.52)],.016,cM,10));
-    g.add(tb([new THREE.Vector3(.36,.18,.56),new THREE.Vector3(.58,.02,.45)],.016,cM,10));
-    g.add(tb([new THREE.Vector3(-.05,.58,.56),new THREE.Vector3(-.45,.52,.48),new THREE.Vector3(-.65,.35,.3),new THREE.Vector3(-.6,.05,.15)],.022,cM,24));
+    g.add(tb([new V(-.04,.64,.6),new V(-.18,.35,.66),new V(-.3,.05,.6),new V(-.36,-.25,.52),new V(-.3,-.6,.4),new V(-.22,-.9,.28)],.032,cM,42));
+    g.add(tb([new V(.14,.64,.56),new V(.32,.4,.6),new V(.44,.1,.52),new V(.44,-.2,.44),new V(.38,-.55,.34),new V(.28,-.85,.22)],.03,cM,42));
+    g.add(tb([new V(-.06,.6,.58),new V(-.35,.55,.5),new V(-.58,.42,.35),new V(-.66,.2,.2),new V(-.62,-.05,.1)],.024,cM,30));
+    g.add(tb([new V(-.24,.3,.64),new V(-.48,.2,.56),new V(-.58,.05,.46)],.016,cM,14));
+    g.add(tb([new V(-.32,0,.58),new V(-.52,-.12,.48)],.014,cM,10));
+    g.add(tb([new V(.3,.35,.58),new V(.5,.22,.5),new V(.58,.05,.4)],.016,cM,14));
+    g.add(tb([new V(.42,.05,.5),new V(.56,-.1,.4)],.014,cM,10));
+    g.add(tb([new V(.38,-.18,.42),new V(.52,-.32,.32)],.012,cM,10));
+    g.add(tb([new V(.15,-.3,-.35),new V(.1,-.6,-.25),new V(.08,-.85,-.12)],.02,cM,18));
     // AV Groove
-    g.add(tb([new THREE.Vector3(-.62,.48,.3),new THREE.Vector3(-.1,.52,.62),new THREE.Vector3(.5,.48,.48),new THREE.Vector3(.72,.42,0),new THREE.Vector3(.5,.48,-.42),new THREE.Vector3(-.1,.52,-.52),new THREE.Vector3(-.62,.48,-.22),new THREE.Vector3(-.72,.48,.1),new THREE.Vector3(-.62,.48,.3)],.028,gM,56));
+    g.add(tb([new V(-.65,.5,.28),new V(-.2,.54,.62),new V(.3,.52,.55),new V(.6,.48,.3),new V(.74,.44,0),new V(.6,.48,-.35),new V(.2,.52,-.5),new V(-.2,.54,-.48),new V(-.55,.5,-.25),new V(-.7,.48,.05),new V(-.65,.5,.28)],.03,gM,64));
     // Kapaklar
-    var mk=new THREE.Mesh(new THREE.TorusGeometry(.18,.035,12,24),vlM);mk.position.set(-.2,.5,.25);mk.rotation.x=Math.PI/2*.9;g.add(mk);
-    var tk=new THREE.Mesh(new THREE.TorusGeometry(.16,.03,12,24),vlM);tk.position.set(.3,.48,.3);tk.rotation.x=Math.PI/2*.85;g.add(tk);
+    var mk=new THREE.Mesh(new THREE.TorusGeometry(.2,.04,14,28),vlM);mk.position.set(-.2,.52,.28);mk.rotation.x=Math.PI/2*.9;g.add(mk);
+    var tk=new THREE.Mesh(new THREE.TorusGeometry(.17,.035,14,28),vlM);tk.position.set(.32,.5,.32);tk.rotation.x=Math.PI/2*.85;g.add(tk);
     // Septum
-    g.add(tb([new THREE.Vector3(.1,.5,.55),new THREE.Vector3(.1,0,.58),new THREE.Vector3(.1,-.5,.48),new THREE.Vector3(.08,-.95,.25)],.018,gM,28));
+    g.add(tb([new V(.1,.52,.56),new V(.1,.2,.6),new V(.1,-.15,.56),new V(.1,-.5,.46),new V(.08,-.95,.24)],.02,gM,32));
+    // Kas lifleri
+    [[new V(-.3,.3,.58),new V(-.35,-.1,.62),new V(-.28,-.5,.5)],[new V(-.45,.25,.45),new V(-.5,-.05,.5),new V(-.42,-.4,.4)],[new V(.25,.3,.55),new V(.32,-.05,.58),new V(.3,-.4,.45)],[new V(.48,.2,.4),new V(.52,-.1,.42),new V(.46,-.4,.32)]].forEach(function(p){g.add(tb(p,.012,fiberM,16))});
     // Lights
-    var l1=new THREE.PointLight(0xff3333,.8,5);l1.position.set(0,.5,2);g.add(l1);
-    var l2=new THREE.PointLight(0xff8888,.4,4);l2.position.set(0,1.5,1);g.add(l2);
-    var l3=new THREE.PointLight(0xffffff,.3,5);l3.position.set(-2,1,0);g.add(l3);
+    g.add(Object.assign(new THREE.PointLight(0xff3333,.9,6),{position:new V(0,.5,2.5)}));
+    g.add(Object.assign(new THREE.PointLight(0xff8888,.5,5),{position:new V(0,1.8,1)}));
+    g.add(Object.assign(new THREE.PointLight(0xffffff,.4,6),{position:new V(-2.5,1,0)}));
+    g.add(Object.assign(new THREE.PointLight(0xffaaaa,.3,5),{position:new V(2,0,-1)}));
   }
 
-  // ===== REGISTER COMPONENT =====
+  // ====== COMPONENT ======
   AFRAME.registerComponent('threejs-heart',{
     init:function(){
+      var el=this.el;
+      // heartObj = outer group (sits on marker, marker-tracked position)
       heartObj=new THREE.Group();
-      this.el.object3D.add(heartObj);
-      heartObj.scale.set(0.6,0.6,0.6);
-      heartObj.position.set(0,0.8,0);
-      heartObj.rotation.x=-0.2;
-      heartObj.visible=false; // HIDDEN until marker
-      buildHeart(heartObj);
+      el.object3D.add(heartObj);
+      heartObj.position.set(0,0.85,0);
+      heartObj.rotation.x=-0.15;
+      heartObj.visible=false;
 
+      // spinGroup = inner group (auto-rotation happens here, independent of marker)
+      spinGroup=new THREE.Group();
+      heartObj.add(spinGroup);
+      spinGroup.scale.set(0.55,0.55,0.55);
+
+      buildHeart(spinGroup);
+
+      // ====== MARKER EVENTS with GRACE PERIOD ======
       var markerEl=document.getElementById('hm');
       if(markerEl){
         markerEl.addEventListener('markerFound',function(){
-          markerVisible=true;
-          heartObj.visible=true;
-          document.getElementById('status').classList.add('ok');
-          document.getElementById('stxt').textContent='✅ Marker bulundu — Kalp yüklendi!';
-          document.getElementById('hint').style.display='flex';
-          setTimeout(function(){document.getElementById('hint').style.display='none'},6000);
+          markerReallyVisible=true;
+          // Cancel any pending hide
+          if(lostTimer){clearTimeout(lostTimer);lostTimer=null}
+
+          if(!markerVisible){
+            markerVisible=true;
+            heartObj.visible=true;
+            document.getElementById('status').classList.add('ok');
+            document.getElementById('stxt').textContent='✅ Marker bulundu — 3D Kalp aktif!';
+            document.getElementById('mode-bar').style.display='flex';
+
+            if(!everFound){
+              everFound=true;
+              document.getElementById('hint').style.display='flex';
+              setTimeout(function(){document.getElementById('hint').style.display='none'},7000);
+              var fl=document.getElementById('found-flash');
+              fl.classList.add('show');
+              setTimeout(function(){fl.classList.remove('show')},600);
+            }
+          }
         });
+
         markerEl.addEventListener('markerLost',function(){
-          markerVisible=false;
-          heartObj.visible=false;
-          hidePins();
-          closePanel();
-          document.getElementById('status').classList.remove('ok');
-          document.getElementById('stxt').textContent='Marker aranıyor…';
+          markerReallyVisible=false;
+          // Start grace period — don't hide immediately
+          if(lostTimer)clearTimeout(lostTimer);
+          lostTimer=setTimeout(function(){
+            if(!markerReallyVisible){
+              markerVisible=false;
+              heartObj.visible=false;
+              hidePins();
+              document.getElementById('status').classList.remove('ok');
+              document.getElementById('stxt').textContent='Marker aranıyor…';
+              document.getElementById('mode-bar').style.display='none';
+            }
+            lostTimer=null;
+          },GRACE_MS);
         });
       }
     },
+
     tick:function(){
-      if(!heartObj||!markerVisible)return;
-      hbPhase+=0.03;
-      var s=0.6*(1+Math.sin(hbPhase)*0.02+Math.sin(hbPhase*2.2)*0.01);
-      heartObj.scale.set(s,s,s);
-      updatePins();
+      if(!heartObj||!spinGroup||!markerVisible)return;
+
+      // Heartbeat on spinGroup
+      hbPhase+=0.035;
+      var beat=1+Math.sin(hbPhase)*0.02+Math.sin(hbPhase*2.2)*0.009;
+      var s=0.55*beat;
+      spinGroup.scale.set(s,s,s);
+
+      // Auto-rotate on spinGroup (doesn't affect marker tracking)
+      if(autoRotate) spinGroup.rotation.y+=0.004;
+
+      // Update pin positions (smoothed)
+      updatePinPositions();
     }
   });
 
-  function updatePins(){
+  // ====== SMOOTHED PIN PROJECTION ======
+  function updatePinPositions(){
     var sc=document.getElementById('arscene');
-    if(!sc||!sc.camera||!heartObj)return;
+    if(!sc||!sc.camera||!spinGroup)return;
     var cam=sc.camera,w=window.innerWidth,h=window.innerHeight;
-    Object.keys(DATA).forEach(function(k){
-      var p=DATA[k].pos,v=new THREE.Vector3(p.x,p.y,p.z);
-      heartObj.localToWorld(v);v.project(cam);
-      var sx=(v.x*.5+.5)*w,sy=(-v.y*.5+.5)*h,el=pinEls[k];
-      if(el){
-        if(v.z<1&&sx>-50&&sx<w+50&&sy>-50&&sy<h+50){el.style.display='flex';el.style.left=(sx-15)+'px';el.style.top=(sy-15)+'px'}
-        else{el.style.display='none'}
+    var keys=Object.keys(DATA);
+
+    for(var i=0;i<keys.length;i++){
+      var k=keys[i];
+      var p=DATA[k].pos;
+      var v=new THREE.Vector3(p.x,p.y,p.z);
+      // Transform through spinGroup (which is inside heartObj which is on the marker)
+      spinGroup.localToWorld(v);
+      v.project(cam);
+
+      var rawX=(v.x*.5+.5)*w;
+      var rawY=(-v.y*.5+.5)*h;
+      var el=pinEls[k];
+      if(!el)continue;
+
+      // Behind camera or out of screen?
+      if(v.z>=1||v.z<0||rawX<-60||rawX>w+60||rawY<-60||rawY>h+60){
+        el.style.display='none';
+        continue;
       }
-    });
+
+      // Initialize smooth position
+      if(!pinSmooth[k]) pinSmooth[k]={sx:rawX,sy:rawY};
+
+      // Lerp toward target
+      var ps=pinSmooth[k];
+      ps.sx+=(rawX-ps.sx)*PIN_LERP;
+      ps.sy+=(rawY-ps.sy)*PIN_LERP;
+
+      // Use transform3d for GPU-accelerated positioning (no reflow)
+      el.style.display='flex';
+      el.style.transform='translate3d('+(ps.sx-12)+'px,'+(ps.sy-12)+'px,0)';
+    }
   }
-  function hidePins(){Object.keys(pinEls).forEach(function(k){if(pinEls[k])pinEls[k].style.display='none'})}
+
+  function hidePins(){
+    var keys=Object.keys(pinEls);
+    for(var i=0;i<keys.length;i++){
+      if(pinEls[keys[i]]){
+        pinEls[keys[i]].style.display='none';
+        pinEls[keys[i]].style.transform='';
+      }
+    }
+    pinSmooth={};
+  }
+
+  // ====== INFO PANEL ======
   function showInfo(k){
     var d=DATA[k];if(!d)return;
+    // Update selected pin highlight
+    if(selectedPart&&pinEls[selectedPart]) pinEls[selectedPart].classList.remove('selected');
+    selectedPart=k;
+    if(pinEls[k]) pinEls[k].classList.add('selected');
+
     document.getElementById('pi').textContent=d.i;
     document.getElementById('pt').textContent=' '+d.t;
     var h=document.querySelector('.ph h3'),ot=h.querySelector('.tag');if(ot)ot.remove();
-    var tg=document.createElement('span');tg.className='tag';tg.style.cssText='background:'+d.tc+'22;color:'+d.tc+';border:1px solid '+d.tc+'44';tg.textContent=d.tag;h.appendChild(tg);
+    var tg=document.createElement('span');tg.className='tag';
+    tg.style.cssText='background:'+d.tc+'22;color:'+d.tc+';border:1px solid '+d.tc+'44';
+    tg.textContent=d.tag;h.appendChild(tg);
     document.getElementById('pstats').innerHTML=d.s.map(function(s){return'<div class="cell"><div class="v">'+s.v+'</div><div class="l">'+s.l+'</div></div>'}).join('');
     document.getElementById('pdesc').textContent=d.d;
     document.getElementById('pfact').innerHTML=d.f;
     document.getElementById('panel').classList.add('open');
   }
-  function closePanel(){document.getElementById('panel').classList.remove('open')}
+
+  function closePanel(){
+    document.getElementById('panel').classList.remove('open');
+    if(selectedPart&&pinEls[selectedPart]) pinEls[selectedPart].classList.remove('selected');
+    selectedPart=null;
+  }
+
+  function toggleRotate(){
+    autoRotate=!autoRotate;
+    document.getElementById('btn-rot').classList.toggle('active',autoRotate);
+  }
+
   function boot(){
     document.getElementById('splash').classList.add('out');
-    setTimeout(function(){document.getElementById('splash').style.display='none'},700);
+    setTimeout(function(){document.getElementById('splash').style.display='none'},800);
     document.getElementById('hdr').style.display='flex';
     document.getElementById('status').style.display='flex';
     document.getElementById('arscene').style.display='';
@@ -238,44 +370,50 @@
 <body>
 
 <div id="splash">
+  
   <div class="ey">Artırılmış Gerçeklik · 3D</div>
-  <h1>Kalp Anatomisi<br>Eğitim Uygulaması</h1>
-  <p class="sub">HIRO marker'a kamerayı doğrultun<br>3D kalp modeli marker üzerinde belirecek</p>
+  <h1>Kalp Anatomisi</h1>
+  <p class="sub">3D kalp modelini AR ile keşfedin</p>
   <div class="steps">
     <div class="stp"><div class="n">1</div><p>HIRO marker'ını başka bir ekrandan veya kağıttan hazırlayın</p></div>
-    <div class="stp"><div class="n">2</div><p>Kameranızı marker'a doğrultun — kalp marker üzerinde belirecek</p></div>
-    <div class="stp"><div class="n">3</div><p>Kamerayı hareket ettirin — kalp sabit kalır. Noktalara dokunun</p></div>
+    <div class="stp"><div class="n">2</div><p>Kameranızı marker'a doğrultun — 3D kalp belirecek</p></div>
+    <div class="stp"><div class="n">3</div><p>Etrafında dolanın, noktalara dokunarak keşfedin</p></div>
   </div>
   <button id="go" onclick="boot()">Kamerayı Aç →</button>
   <a class="dl" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">📎 HIRO Marker İndir</a>
 </div>
 
-<div id="hdr"><div class="ic">🫀</div><div><h2>Kalp Anatomisi AR</h2><small>Marker'a doğrultun · Noktalara dokunun</small></div></div>
-<div id="status"><span class="led"></span><span id="stxt">Marker aranıyor…</span></div>
-<div id="hint">📌 Kamerayı hareket ettirin — kalp marker'da sabit kalır · Noktalara dokunun</div>
+<div id="hdr">
+  <div class="ic"></div>
+  <div style="display:flex;align-items:center"><h2>Kalp AR</h2><span class="v2">v3</span></div>
+  <small style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted)">Marker'a doğrultun</small>
+</div>
 
-<div class="pin-label" id="pin-aort" onclick="showInfo('aort')" style="color:#e63946"><div class="dot"><div class="dot-inner"></div></div><span>Aort</span></div>
-<div class="pin-label" id="pin-pulmoner" onclick="showInfo('pulmoner')" style="color:#4895ef"><div class="dot"><div class="dot-inner"></div></div><span>Pulmoner</span></div>
-<div class="pin-label" id="pin-sol_atriyum" onclick="showInfo('sol_atriyum')" style="color:#f4a261"><div class="dot"><div class="dot-inner"></div></div><span>Sol Atriyum</span></div>
-<div class="pin-label" id="pin-sag_atriyum" onclick="showInfo('sag_atriyum')" style="color:#e9c46a"><div class="dot"><div class="dot-inner"></div></div><span>Sağ Atriyum</span></div>
-<div class="pin-label" id="pin-sol_ventrikul" onclick="showInfo('sol_ventrikul')" style="color:#9b5de5"><div class="dot"><div class="dot-inner"></div></div><span>Sol Ventrikül</span></div>
-<div class="pin-label" id="pin-sag_ventrikul" onclick="showInfo('sag_ventrikul')" style="color:#4895ef"><div class="dot"><div class="dot-inner"></div></div><span>Sağ Ventrikül</span></div>
-<div class="pin-label" id="pin-koroner" onclick="showInfo('koroner')" style="color:#fbbf24"><div class="dot"><div class="dot-inner"></div></div><span>Koroner</span></div>
+<div id="status"><span class="led"></span><span id="stxt">Marker aranıyor…</span></div>
+<div id="mode-bar"><button class="mbtn active" id="btn-rot" onclick="toggleRotate()">🔄 Oto Dönüş</button></div>
+<div id="found-flash"></div>
+<div id="hint">Etrafında dolanın· Noktalara dokunarak bilgi alın</div>
+
+<div class="pin" id="pin-aort" onclick="showInfo('aort')" style="color:#e63946"><div class="ring"><div class="core"></div></div><span>Aort</span></div>
+<div class="pin" id="pin-pulmoner" onclick="showInfo('pulmoner')" style="color:#4895ef"><div class="ring"><div class="core"></div></div><span>Pulmoner A.</span></div>
+<div class="pin" id="pin-sol_atriyum" onclick="showInfo('sol_atriyum')" style="color:#f4a261"><div class="ring"><div class="core"></div></div><span>Sol Atriyum</span></div>
+<div class="pin" id="pin-sag_atriyum" onclick="showInfo('sag_atriyum')" style="color:#e9c46a"><div class="ring"><div class="core"></div></div><span>Sağ Atriyum</span></div>
+<div class="pin" id="pin-sol_ventrikul" onclick="showInfo('sol_ventrikul')" style="color:#9b5de5"><div class="ring"><div class="core"></div></div><span>Sol Ventrikül</span></div>
+<div class="pin" id="pin-sag_ventrikul" onclick="showInfo('sag_ventrikul')" style="color:#4895ef"><div class="ring"><div class="core"></div></div><span>Sağ Ventrikül</span></div>
+<div class="pin" id="pin-koroner" onclick="showInfo('koroner')" style="color:#fbbf24"><div class="ring"><div class="core"></div></div><span>Koroner A.</span></div>
 
 <div id="panel">
   <div class="ph"><h3><span id="pi"></span><span id="pt"></span></h3><button id="pcl" onclick="closePanel()">✕</button></div>
   <div class="pb"><div class="row3" id="pstats"></div><p class="desc" id="pdesc"></p><div class="ff" id="pfact"></div></div>
 </div>
 
-<a-scene
-  id="arscene"
-  embedded
+<a-scene id="arscene" embedded
   arjs="sourceType:webcam; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3;"
   vr-mode-ui="enabled:false"
   renderer="logarithmicDepthBuffer:true; antialias:true; alpha:true;"
   style="position:fixed;inset:0;z-index:5;display:none;"
 >
-  <a-marker id="hm" preset="hiro" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+  <a-marker id="hm" preset="hiro" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.005" smoothThreshold="5">
     <a-entity id="heart-anchor" threejs-heart></a-entity>
   </a-marker>
   <a-entity camera></a-entity>
