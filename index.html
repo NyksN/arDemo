@@ -3,578 +3,711 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR Kalp Anatomisi - Eğitim Uygulaması</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <title>AR Kalp Anatomisi — 3D Eğitim</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; font-family: 'Segoe UI', -apple-system, sans-serif; }
-
-    /* Üst başlık */
-    #header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 9999;
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.92), rgba(153, 27, 27, 0.95));
-      backdrop-filter: blur(12px);
-      color: white;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 2px solid rgba(252, 165, 165, 0.3);
+    :root {
+      --c-bg: #0a0610;
+      --c-surface: rgba(14,10,26,.92);
+      --c-red: #e63946;
+      --c-red-dim: rgba(230,57,70,.15);
+      --c-blue: #4895ef;
+      --c-purple: #9b5de5;
+      --c-amber: #f4a261;
+      --c-green: #06d6a0;
+      --c-text: #f1faee;
+      --c-muted: rgba(241,250,238,.5);
+      --radius: 16px;
     }
 
-    #header .icon {
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body {
+      background: var(--c-bg);
+      color: var(--c-text);
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+      height: 100dvh;
+      touch-action: none;
     }
 
-    #header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
-    #header p { font-size: 11px; opacity: 0.8; margin-top: 2px; }
-
-    /* Alt bilgi paneli */
-    #info-panel {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 9999;
-      background: rgba(10, 10, 20, 0.93);
-      backdrop-filter: blur(16px);
-      color: white;
-      border-top: 2px solid rgba(220, 38, 38, 0.5);
-      transform: translateY(100%);
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      max-height: 55vh;
-      overflow-y: auto;
+    /* ====== SPLASH / INTRO ====== */
+    #splash {
+      position: fixed; inset:0; z-index:1000;
+      background: linear-gradient(165deg, #0a0610 0%, #150d25 45%, #1d1030 100%);
+      display: flex; flex-direction:column; align-items:center; justify-content:center;
+      padding: 32px; text-align:center;
+      transition: opacity .6s, transform .6s;
     }
+    #splash.out { opacity:0; transform:scale(1.04); pointer-events:none; }
 
-    #info-panel.active { transform: translateY(0); }
-
-    #info-panel .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    #splash .eyebrow {
+      font-family:'Outfit',sans-serif; font-size:11px; font-weight:700;
+      text-transform:uppercase; letter-spacing:3px; color:var(--c-red);
+      margin-bottom:12px; opacity:.8;
     }
-
-    #info-panel .panel-header h2 {
-      font-size: 18px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    #splash h1 {
+      font-family:'Outfit',sans-serif; font-size:32px; font-weight:900;
+      line-height:1.15; margin-bottom:8px;
+      background:linear-gradient(135deg,#f1faee,#e63946);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     }
+    #splash .sub { font-size:14px; color:var(--c-muted); margin-bottom:36px; line-height:1.6; }
 
-    #info-panel .panel-header .tag {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .steps { width:100%; max-width:340px; }
+    .stp {
+      display:flex; align-items:center; gap:14px;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+      padding:14px 16px; border-radius:14px; margin-bottom:8px; text-align:left;
     }
-
-    #close-panel {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: white;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+    .stp .num {
+      width:32px;height:32px;border-radius:50%;flex-shrink:0;
+      background:var(--c-red-dim); color:var(--c-red);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Outfit';font-weight:800;font-size:14px;
     }
-
-    #info-panel .panel-body { padding: 16px 20px 24px; }
-
-    #info-panel .stat-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    #info-panel .stat {
-      flex: 1;
-      background: rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #info-panel .stat .val {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 2px;
-    }
-
-    #info-panel .stat .lbl {
-      font-size: 10px;
-      opacity: 0.6;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    #info-panel .desc {
-      font-size: 14px;
-      line-height: 1.7;
-      opacity: 0.85;
-      margin-bottom: 14px;
-    }
-
-    #info-panel .fun-fact {
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(168, 85, 247, 0.15));
-      border: 1px solid rgba(220, 38, 38, 0.25);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    #info-panel .fun-fact strong {
-      color: #fca5a5;
-    }
-
-    /* Navigasyon butonları */
-    #nav-buttons {
-      position: fixed;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9998;
-      display: flex;
-      gap: 8px;
-      transition: opacity 0.3s;
-    }
-
-    #nav-buttons.hidden { opacity: 0; pointer-events: none; }
-
-    .nav-btn {
-      padding: 10px 16px;
-      border-radius: 25px;
-      border: 1.5px solid rgba(255,255,255,0.2);
-      background: rgba(10, 10, 20, 0.8);
-      backdrop-filter: blur(8px);
-      color: white;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.25s;
-      white-space: nowrap;
-    }
-
-    .nav-btn:active {
-      transform: scale(0.95);
-      background: rgba(220, 38, 38, 0.4);
-    }
-
-    .nav-btn .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* AR status badge */
-    #ar-status {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      background: rgba(10, 10, 20, 0.75);
-      backdrop-filter: blur(8px);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s;
-    }
-
-    #ar-status .pulse {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #facc15;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    #ar-status.found .pulse { background: #4ade80; }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    /* Talimat overlay — marker bulunamazsa */
-    #instructions {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 10000;
-      background: linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #2d1040 100%);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      text-align: center;
-      transition: opacity 0.5s;
-    }
-
-    #instructions.hidden { opacity: 0; pointer-events: none; }
-
-    #instructions h2 {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      background: linear-gradient(90deg, #f87171, #fb923c, #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    #instructions p { font-size: 14px; opacity: 0.7; margin-bottom: 30px; line-height: 1.6; }
-
-    #instructions .step {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(255,255,255,0.06);
-      padding: 14px 20px;
-      border-radius: 14px;
-      margin-bottom: 10px;
-      width: 100%;
-      max-width: 340px;
-      text-align: left;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #instructions .step .num {
-      width: 32px; height: 32px;
-      background: rgba(220, 38, 38, 0.3);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800;
-      font-size: 14px;
-      flex-shrink: 0;
-      color: #fca5a5;
-    }
-
-    #instructions .step span { font-size: 13px; line-height: 1.5; }
+    .stp p { font-size:13px; line-height:1.5; color:var(--c-muted); }
 
     #start-btn {
-      margin-top: 24px;
-      padding: 14px 40px;
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+      margin-top:28px; padding:16px 52px; border:none; border-radius:40px;
+      background:linear-gradient(135deg,var(--c-red),#c1121f); color:#fff;
+      font-family:'Outfit'; font-size:16px; font-weight:700; cursor:pointer;
+      letter-spacing:.5px;
+      box-shadow:0 6px 30px rgba(230,57,70,.4), inset 0 1px 0 rgba(255,255,255,.15);
+      transition:transform .15s, box-shadow .15s;
+    }
+    #start-btn:active { transform:scale(.96); }
+
+    .dl-link {
+      margin-top:16px; color:var(--c-blue); font-size:11px; text-decoration:underline;
+      opacity:.7;
     }
 
-    #instructions .marker-link {
-      margin-top: 16px;
-      color: #93c5fd;
-      font-size: 12px;
-      text-decoration: underline;
+    /* ====== HEADER ====== */
+    #header {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      background:var(--c-surface); backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      padding:12px 18px; display:none; align-items:center; gap:12px;
+    }
+    #header .badge {
+      width:38px;height:38px;border-radius:12px;
+      background:var(--c-red-dim);
+      display:flex;align-items:center;justify-content:center;font-size:20px;
+    }
+    #header h2 { font-family:'Outfit'; font-size:15px; font-weight:700; }
+    #header small { font-size:10px; color:var(--c-muted); display:block; margin-top:1px; }
+
+    /* ====== LOADING ====== */
+    #loading {
+      position:fixed; inset:0; z-index:500;
+      background:rgba(10,6,16,.9); backdrop-filter:blur(12px);
+      display:none; flex-direction:column; align-items:center; justify-content:center;
+      gap:16px;
+    }
+    #loading.show { display:flex; }
+    .spinner {
+      width:48px; height:48px; border:3px solid rgba(255,255,255,.1);
+      border-top-color:var(--c-red); border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin {to{transform:rotate(360deg)}}
+    #load-text { font-size:14px; color:var(--c-muted); }
+    #load-pct { font-family:'Outfit'; font-size:24px; font-weight:800; color:var(--c-red); }
+
+    /* ====== THREE.JS CANVAS ====== */
+    #three-canvas {
+      position:fixed; inset:0; z-index:10;
+      display:none;
+    }
+
+    /* ====== STATUS PILL ====== */
+    #status {
+      position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:200;
+      background:var(--c-surface); backdrop-filter:blur(12px);
+      padding:7px 18px; border-radius:22px; font-size:11px; font-weight:600;
+      display:none; align-items:center; gap:8px;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    #status .led {
+      width:7px;height:7px;border-radius:50%;background:var(--c-amber);
+      animation:blink 1.4s infinite;
+    }
+    #status.ok .led { background:var(--c-green); animation:none; }
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* ====== CONTROLS HINT ====== */
+    #hint {
+      position:fixed; bottom:110px; left:50%; transform:translateX(-50%); z-index:200;
+      background:var(--c-surface); backdrop-filter:blur(10px);
+      padding:8px 18px; border-radius:20px; font-size:11px; font-weight:500;
+      display:none; align-items:center; gap:8px;
+      border:1px solid rgba(255,255,255,.06); color:var(--c-muted);
+      animation:fadeUp .5s ease-out;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+    /* ====== BOTTOM NAV ====== */
+    #nav {
+      position:fixed; bottom:12px; left:8px; right:8px; z-index:200;
+      display:none; gap:5px; flex-wrap:wrap; justify-content:center;
+    }
+    .nb {
+      padding:9px 14px; border-radius:24px;
+      background:var(--c-surface); backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff; font-size:11.5px; font-weight:600; cursor:pointer;
+      display:flex; align-items:center; gap:6px; white-space:nowrap;
+      transition:all .2s; font-family:'DM Sans';
+    }
+    .nb:active { transform:scale(.93); background:var(--c-red-dim); }
+    .nb .dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+
+    /* ====== INFO PANEL ====== */
+    #panel {
+      position:fixed; bottom:0; left:0; right:0; z-index:300;
+      background:var(--c-surface); backdrop-filter:blur(24px);
+      border-top:1.5px solid rgba(230,57,70,.3);
+      border-radius:22px 22px 0 0;
+      transform:translateY(100%);
+      transition:transform .45s cubic-bezier(.16,1,.3,1);
+      max-height:54vh; overflow-y:auto;
+    }
+    #panel.open { transform:translateY(0); }
+
+    .pan-head {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:18px 20px 12px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .pan-head h3 {
+      font-family:'Outfit'; font-size:17px; font-weight:700;
+      display:flex; align-items:center; gap:10px;
+    }
+    .pan-head .tag {
+      font-size:9.5px; font-weight:700; padding:3px 10px; border-radius:20px;
+      text-transform:uppercase; letter-spacing:.6px;
+    }
+    #pan-close {
+      width:30px;height:30px;border-radius:50%;border:none;
+      background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+
+    .pan-body { padding:14px 20px 28px; }
+    .row3 { display:flex; gap:8px; margin-bottom:14px; }
+    .cell {
+      flex:1;background:rgba(255,255,255,.04);border-radius:12px;
+      padding:11px;text-align:center;border:1px solid rgba(255,255,255,.05);
+    }
+    .cell .v { font-family:'Outfit'; font-size:17px; font-weight:800; margin-bottom:2px; }
+    .cell .l { font-size:9px; color:var(--c-muted); text-transform:uppercase; letter-spacing:.5px; }
+
+    .desc { font-size:13.5px; line-height:1.75; color:var(--c-muted); margin-bottom:13px; }
+
+    .funfact {
+      background:linear-gradient(135deg, var(--c-red-dim), rgba(155,93,229,.12));
+      border:1px solid rgba(230,57,70,.18); border-radius:14px;
+      padding:13px 16px; font-size:12.5px; line-height:1.65;
+    }
+    .funfact b { color:var(--c-red); }
+
+    /* ====== RESPONSIVE ====== */
+    @media(max-width:380px){
+      .nb{padding:7px 10px;font-size:10.5px}
+      #heart-svg{width:280px;height:340px}
     }
   </style>
 </head>
 <body>
 
-  <!-- Başlangıç talimatları -->
-  <div id="instructions">
-    <h2>❤️ Kalp Anatomisi AR</h2>
-    <p>Artırılmış gerçeklik ile insan kalbini<br>interaktif olarak keşfedin</p>
-
-    <div class="step">
-      <div class="num">1</div>
-      <span>HIRO marker'ını başka bir ekrandan açın veya kağıda yazdırın</span>
-    </div>
-    <div class="step">
-      <div class="num">2</div>
-      <span>Kameranızı marker'a doğrultun — 3D kalp modeli belirsin</span>
-    </div>
-    <div class="step">
-      <div class="num">3</div>
-      <span>Kalbin bölgelerine dokunarak anatomik bilgileri okuyun</span>
-    </div>
-
-    <button id="start-btn" onclick="startAR()">Başla →</button>
-    <a class="marker-link" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">
-      📎 HIRO Marker'ı İndir
-    </a>
+<!-- ===== SPLASH ===== -->
+<div id="splash">
+  <div class="eyebrow">Artırılmış Gerçeklik</div>
+  <h1>Kalp Anatomisi<br>3D Eğitim</h1>
+  <p class="sub">Gerçekçi 3D kalp modelini döndürün,<br>yakınlaşın ve bölgelere dokunarak keşfedin</p>
+  <div class="steps">
+    <div class="stp"><div class="num">1</div><p>HIRO marker'ını başka bir ekrandan açın veya yazdırın</p></div>
+    <div class="stp"><div class="num">2</div><p>Kameranızı marker'a doğrultun — 3D kalp yüklenecek</p></div>
+    <div class="stp"><div class="num">3</div><p>Parmağınızla döndürün, iki parmakla yakınlaşın</p></div>
   </div>
+  <button id="start-btn" onclick="boot()">Başla →</button>
+  <a class="dl-link" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank">📎 HIRO Marker İndir</a>
+</div>
 
-  <!-- Üst başlık -->
-  <div id="header" style="display:none;">
-    <div class="icon">❤️</div>
-    <div>
-      <h1>Kalp Anatomisi AR</h1>
-      <p>Bölgelere dokunarak keşfet</p>
-    </div>
+<!-- ===== HEADER ===== -->
+<div id="header">
+  <div class="badge">🫀</div>
+  <div><h2>Kalp Anatomisi 3D</h2><small>Döndür · Yakınlaştır · Keşfet</small></div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="load-pct">0%</div>
+  <div id="load-text">3D model yükleniyor…</div>
+</div>
+
+<!-- ===== STATUS ===== -->
+<div id="status"><span class="led"></span><span id="stxt">Marker aranıyor…</span></div>
+
+<!-- ===== HINT ===== -->
+<div id="hint">☝️ Tek parmak: döndür &nbsp;·&nbsp; 🤏 İki parmak: yakınlaş</div>
+
+<!-- ===== CANVAS ===== -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div id="nav">
+  <button class="nb" onclick="showInfo('aort')"><span class="dot" style="background:#e63946"></span>Aort</button>
+  <button class="nb" onclick="showInfo('pulmoner')"><span class="dot" style="background:#4895ef"></span>Pulmoner</button>
+  <button class="nb" onclick="showInfo('sol_a')"><span class="dot" style="background:#f4a261"></span>Sol Atriyum</button>
+  <button class="nb" onclick="showInfo('sag_a')"><span class="dot" style="background:#e9c46a"></span>Sağ Atriyum</button>
+  <button class="nb" onclick="showInfo('sol_v')"><span class="dot" style="background:#9b5de5"></span>Sol Ventrikül</button>
+  <button class="nb" onclick="showInfo('sag_v')"><span class="dot" style="background:#4895ef"></span>Sağ Ventrikül</button>
+  <button class="nb" onclick="showInfo('koroner')"><span class="dot" style="background:#e9c46a"></span>Koroner</button>
+</div>
+
+<!-- ===== INFO PANEL ===== -->
+<div id="panel">
+  <div class="pan-head">
+    <h3><span id="pi"></span><span id="pt"></span></h3>
+    <button id="pan-close" onclick="closePanel()">✕</button>
   </div>
-
-  <!-- AR durumu -->
-  <div id="ar-status" style="display:none;">
-    <span class="pulse"></span>
-    <span id="status-text">Marker aranıyor...</span>
+  <div class="pan-body">
+    <div class="row3" id="pstats"></div>
+    <p class="desc" id="pdesc"></p>
+    <div class="funfact" id="pfact"></div>
   </div>
+</div>
 
-  <!-- Bilgi paneli -->
-  <div id="info-panel">
-    <div class="panel-header">
-      <h2>
-        <span id="panel-icon">🫀</span>
-        <span id="panel-title">Aort Damarı</span>
-      </h2>
-      <button id="close-panel" onclick="closePanel()">✕</button>
-    </div>
-    <div class="panel-body">
-      <div class="stat-row" id="stat-row"></div>
-      <p class="desc" id="panel-desc"></p>
-      <div class="fun-fact" id="panel-fact"></div>
-    </div>
-  </div>
+<!-- ===== A-FRAME AR (marker detection only) ===== -->
+<a-scene
+  id="ar-scene"
+  embedded
+  arjs="sourceType:webcam; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3;"
+  vr-mode-ui="enabled:false"
+  renderer="alpha:true"
+  style="position:fixed;inset:0;z-index:1;display:none;"
+>
+  <a-marker id="hm" preset="hiro"></a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
 
-  <!-- Navigasyon butonları -->
-  <div id="nav-buttons" class="hidden">
-    <button class="nav-btn" onclick="showInfo('aort')">
-      <span class="dot" style="background:#ef4444"></span> Aort
-    </button>
-    <button class="nav-btn" onclick="showInfo('sag_ventrikul')">
-      <span class="dot" style="background:#3b82f6"></span> Sağ Ventrikül
-    </button>
-    <button class="nav-btn" onclick="showInfo('sol_ventrikul')">
-      <span class="dot" style="background:#a855f7"></span> Sol Ventrikül
-    </button>
-    <button class="nav-btn" onclick="showInfo('atriyum')">
-      <span class="dot" style="background:#f59e0b"></span> Atriyum
-    </button>
-  </div>
+<!-- THREE.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ========================================
+// DATA
+// ========================================
+const DATA={
+  aort:{i:'🔴',t:'Aort Damarı (Aorta)',tag:'Ana Arter',tc:'#e63946',
+    s:[{v:'2.5 cm',l:'Çap'},{v:'30-40 cm',l:'Uzunluk'},{v:'5 L/dk',l:'Kan Akışı'}],
+    d:'Aort, vücudumuzun en büyük atardamarıdır. Sol ventrikülden çıkarak yukarı doğru kıvrılır (aort yayı) ve tüm vücuda oksijenli kan taşır. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur. Aort kapağı sayesinde kanın geri akması engellenir.',
+    f:'<b>💡 Biliyor muydun?</b> Aort o kadar güçlüdür ki, kalp her attığında içinden geçen kan 1 metre yüksekliğe fışkırabilir!'},
+  pulmoner:{i:'🔵',t:'Pulmoner Arter',tag:'Akciğer Arteri',tc:'#4895ef',
+    s:[{v:'2 cm',l:'Çap'},{v:'~5 cm',l:'Uzunluk'},{v:'25 mmHg',l:'Basınç'}],
+    d:'Pulmoner arter, sağ ventrikülden çıkarak oksijeni azalmış kanı akciğerlere taşıyan damardır. Vücuttaki tek oksijensiz kan taşıyan arterdir. Akciğerlerde iki dala ayrılır: sağ ve sol pulmoner arterler.',
+    f:'<b>💡 Biliyor muydun?</b> Pulmoner arter, vücuttaki tek "mavi kan" taşıyan arterdir! Diğer tüm arterler oksijenli kan taşırken, bu arter tam tersini yapar.'},
+  sol_a:{i:'🟡',t:'Sol Atriyum',tag:'Üst Sol Odacık',tc:'#f4a261',
+    s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'4 Ven',l:'Bağlantı'}],
+    d:'Sol atriyum, akciğerlerden gelen oksijenli kanı 4 pulmoner ven aracılığıyla toplar. Mitral (biküspit) kapak aracılığıyla kanı sol ventriküle aktarır.',
+    f:'<b>💡 Biliyor muydun?</b> Sol atriyumda oluşan düzensiz sinyaller "atriyal fibrilasyon" denilen en yaygın kalp ritim bozukluğuna neden olur.'},
+  sag_a:{i:'🟠',t:'Sağ Atriyum',tag:'Üst Sağ Odacık',tc:'#e9c46a',
+    s:[{v:'~70 mL',l:'Hacim'},{v:'2 mm',l:'Duvar'},{v:'SA Düğüm',l:'Kalp Pili'}],
+    d:'Sağ atriyum, vücuttan dönen oksijensiz kanı üst ve alt vena kava aracılığıyla toplar. Kalbin doğal pili olan SA (sinoatriyal) düğüm burada bulunur.',
+    f:'<b>💡 Biliyor muydun?</b> Kalbin ritmini belirleyen SA düğüm sağ atriyumda yer alır. Bu küçük hücre grubu dakikada 60-100 sinyal üreterek kalbinizi çalıştırır!'},
+  sol_v:{i:'🟣',t:'Sol Ventrikül',tag:'Alt Sol Odacık',tc:'#9b5de5',
+    s:[{v:'120 mL',l:'Hacim'},{v:'120 mmHg',l:'Basınç'},{v:'12-15 mm',l:'Duvar'}],
+    d:'Sol ventrikül, kalbin en güçlü odacığıdır. Akciğerlerden gelen oksijenli kanı aort aracılığıyla tüm vücuda pompalar. Duvarları sağ ventriküle göre 3 kat daha kalındır.',
+    f:'<b>💡 Biliyor muydun?</b> Sol ventrikül günde yaklaşık 7.500 litre kan pompalar — bir olimpik yüzme havuzunu 7 günde doldurabilecek miktardır!'},
+  sag_v:{i:'🔵',t:'Sağ Ventrikül',tag:'Alt Sağ Odacık',tc:'#4895ef',
+    s:[{v:'85 mL',l:'Hacim'},{v:'25 mmHg',l:'Basınç'},{v:'3-5 mm',l:'Duvar'}],
+    d:'Sağ ventrikül, oksijeni azalmış kanı pulmoner arter yoluyla akciğerlere pompalar. Sol ventriküle göre daha ince duvarlıdır çünkü akciğerler yakındır.',
+    f:'<b>💡 Biliyor muydun?</b> Sağ ventrikül, sol ventriküle göre yaklaşık 6 kat daha az basınçla çalışır ama aynı miktarda kan pompalar!'},
+  koroner:{i:'💛',t:'Koroner Arterler',tag:'Kalbi Besleyen Damarlar',tc:'#e9c46a',
+    s:[{v:'2-4 mm',l:'Çap'},{v:'%5',l:'Debi Payı'},{v:'2 Ana',l:'Dal'}],
+    d:'Koroner arterler, kalp kasının kendisini besleyen damarlardır. Aortun hemen çıkışından dallanırlar ve kalbi bir taç gibi sararlar — "koroner" Latince "taç" demektir.',
+    f:'<b>💡 Biliyor muydun?</b> Bu damarlar sadece 2-4mm çapında olmasına rağmen, kalbin tüm oksijen ihtiyacını karşılar. Tıkanmaları kalp krizine yol açar!'}
+};
 
-  <!-- A-Frame AR -->
-  <a-scene
-    id="ar-scene"
-    embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true"
-    style="display:none;"
-  >
-    <a-marker id="heart-marker" preset="hiro">
+// ========================================
+// THREE.JS — Procedural Realistic Heart
+// ========================================
+let scene, camera, renderer, heartGroup;
+let rotX=0, rotY=0, targetRotX=-.3, targetRotY=0, zoom=1, targetZoom=1;
+let isDragging=false, lastX=0, lastY=0, lastDist=0;
+let heartbeatPhase=0;
+const canvas = document.getElementById('three-canvas');
 
-      <!-- Taban platform -->
-      <a-cylinder position="0 0.02 0" radius="1.3" height="0.04" color="#1e1e2e" opacity="0.6"></a-cylinder>
-      <a-ring position="0 0.05 0" rotation="-90 0 0" radius-inner="1.25" radius-outer="1.35" color="#dc2626" opacity="0.3"
-        animation="property: rotation; from: -90 0 0; to: -90 360 0; loop: true; dur: 15000; easing: linear"></a-ring>
+function initThree(){
+  scene = new THREE.Scene();
 
-      <!-- === KALP GÖVDESİ (ana kütle) === -->
-      <!-- Ana kalp gövdesi -->
-      <a-sphere position="0 0.65 0" radius="0.55" color="#c0392b" opacity="0.85"
-        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-sphere>
-      <!-- Üst kısım (atriyumlar) -->
-      <a-sphere position="-0.18 1.05 0" radius="0.3" color="#a93226" opacity="0.85"
-        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-sphere>
-      <a-sphere position="0.18 1.05 0" radius="0.3" color="#922b21" opacity="0.85"
-        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-sphere>
-      <!-- Alt sivri uç -->
-      <a-cone position="0.05 0.2 0" radius-bottom="0" radius-top="0.35" height="0.4" color="#c0392b" opacity="0.85" rotation="0 0 10"
-        animation="property: scale; from: 1 1 1; to: 1.04 1.04 1.04; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-cone>
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 4.5);
 
-      <!-- === AORT DAMARI (üstten çıkan kırmızı boru) === -->
-      <a-cylinder id="ar-aort" position="0 1.35 0" radius="0.1" height="0.45" color="#e74c3c" opacity="0.9"
-        class="clickable" data-part="aort"
-        animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-cylinder>
-      <a-sphere position="0.15 1.6 0" radius="0.1" color="#e74c3c" opacity="0.9"></a-sphere>
-      <a-cylinder position="0.35 1.55 0" radius="0.07" height="0.35" color="#e74c3c" opacity="0.9" rotation="0 0 80"></a-cylinder>
+  renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
 
-      <!-- === PULMONER ARTER (mavi boru) === -->
-      <a-cylinder position="-0.2 1.3 0.08" radius="0.07" height="0.35" color="#3498db" opacity="0.85" rotation="10 0 15"
-        animation="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 800; easing: easeInOutSine"
-      ></a-cylinder>
+  // Lights
+  const amb = new THREE.AmbientLight(0xffc0c0, 0.5);
+  scene.add(amb);
 
-      <!-- === VENA KAVALAR (mavi damarlar - sağ taraf) === -->
-      <a-cylinder position="0.35 1.15 -0.05" radius="0.06" height="0.35" color="#2980b9" opacity="0.8" rotation="5 0 -15"></a-cylinder>
-      <a-cylinder position="0.38 0.55 -0.05" radius="0.06" height="0.35" color="#2980b9" opacity="0.8" rotation="5 0 -10"></a-cylinder>
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(3, 4, 5);
+  scene.add(key);
 
-      <!-- === ETİKET NOKTALARI (tıklanabilir işaretçiler) === -->
+  const fill = new THREE.DirectionalLight(0xff8888, 0.4);
+  fill.position.set(-3, 1, 3);
+  scene.add(fill);
 
-      <!-- Aort etiketi -->
-      <a-sphere position="0.55 1.55 0" radius="0.08" color="#ef4444" opacity="0.9" class="clickable" data-part="aort"
-        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000"
-      ></a-sphere>
-      <a-text value="AORT" position="0.55 1.72 0" align="center" color="#fca5a5" scale="0.5 0.5 0.5" font="mozillavr"></a-text>
+  const rim = new THREE.DirectionalLight(0xff4444, 0.6);
+  rim.position.set(0, -2, -4);
+  scene.add(rim);
 
-      <!-- Sağ Ventrikül etiketi -->
-      <a-sphere position="0.6 0.6 0.3" radius="0.08" color="#3b82f6" opacity="0.9" class="clickable" data-part="sag_ventrikul"
-        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 250"
-      ></a-sphere>
-      <a-text value="SAG V." position="0.6 0.77 0.3" align="center" color="#93c5fd" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
+  const point = new THREE.PointLight(0xff2222, 0.5, 10);
+  point.position.set(0, 0, 3);
+  scene.add(point);
 
-      <!-- Sol Ventrikül etiketi -->
-      <a-sphere position="-0.6 0.6 0.3" radius="0.08" color="#a855f7" opacity="0.9" class="clickable" data-part="sol_ventrikul"
-        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 500"
-      ></a-sphere>
-      <a-text value="SOL V." position="-0.6 0.77 0.3" align="center" color="#d8b4fe" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
+  heartGroup = new THREE.Group();
+  scene.add(heartGroup);
 
-      <!-- Atriyum etiketi -->
-      <a-sphere position="0 1.25 0.35" radius="0.08" color="#f59e0b" opacity="0.9" class="clickable" data-part="atriyum"
-        animation="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dir: alternate; loop: true; dur: 1000; delay: 750"
-      ></a-sphere>
-      <a-text value="ATRIYUM" position="0 1.42 0.35" align="center" color="#fde68a" scale="0.45 0.45 0.45" font="mozillavr"></a-text>
+  buildHeart();
+  animate();
+}
 
-    </a-marker>
+function buildHeart(){
+  const bodyMat = new THREE.MeshPhysicalMaterial({
+    color:0xb91c1c, roughness:.55, metalness:.1,
+    clearcoat:.3, clearcoatRoughness:.4,
+  });
+  const darkMat = new THREE.MeshPhysicalMaterial({
+    color:0x7f1d1d, roughness:.6, metalness:.05,
+    clearcoat:.2, clearcoatRoughness:.5,
+  });
+  const arteryMat = new THREE.MeshPhysicalMaterial({
+    color:0xef4444, roughness:.4, metalness:.15,
+    clearcoat:.5, clearcoatRoughness:.3,
+  });
+  const veinMat = new THREE.MeshPhysicalMaterial({
+    color:0x3b82f6, roughness:.45, metalness:.12,
+    clearcoat:.4, clearcoatRoughness:.35,
+  });
+  const coronaryMat = new THREE.MeshPhysicalMaterial({
+    color:0xfbbf24, roughness:.35, metalness:.2,
+    clearcoat:.6, clearcoatRoughness:.25,
+  });
 
-    <a-entity camera></a-entity>
-  </a-scene>
+  // === MAIN BODY — Left ventricle (larger, thicker) ===
+  const leftVGeo = new THREE.SphereGeometry(1, 32, 32);
+  leftVGeo.scale(0.75, 1.1, 0.7);
+  const leftV = new THREE.Mesh(leftVGeo, bodyMat);
+  leftV.position.set(-0.15, -0.15, 0);
+  heartGroup.add(leftV);
 
-  <script>
-    // Anatomi verileri
-    const heartData = {
-      aort: {
-        icon: '🔴',
-        title: 'Aort Damarı (Aorta)',
-        tag: 'Ana Arter',
-        tagColor: '#dc2626',
-        stats: [
-          { val: '2.5 cm', lbl: 'Çap' },
-          { val: '30-40 cm', lbl: 'Uzunluk' },
-          { val: '5 L/dk', lbl: 'Kan Akışı' }
-        ],
-        desc: 'Aort, vücudun en büyük atardamarıdır. Sol ventrikülden çıkarak oksijenli kanı tüm vücuda taşır. Aort kapağı sayesinde kanın geri akması önlenir. Çıkan aort, aort yayı ve inen aort olmak üzere üç bölümden oluşur.',
-        fact: '<strong>💡 Biliyor muydun?</strong> Aort o kadar güçlüdür ki, kalp her attığında içinden geçen kan 1 metre yüksekliğe fışkırabilir! Duvarları 2mm kalınlığında elastik dokudan oluşur.'
-      },
-      sag_ventrikul: {
-        icon: '🔵',
-        title: 'Sağ Ventrikül',
-        tag: 'Alt Sağ Odacık',
-        tagColor: '#3b82f6',
-        stats: [
-          { val: '85 mL', lbl: 'Hacim' },
-          { val: '25 mmHg', lbl: 'Basınç' },
-          { val: '3-5 mm', lbl: 'Duvar Kalınlığı' }
-        ],
-        desc: 'Sağ ventrikül, oksijeni azalmış kanı akciğerlere pompalayan odacıktır. Triküspit kapak ile sağ atriyumdan kan alır ve pulmoner kapak aracılığıyla pulmoner artere gönderir. Sol ventriküle göre daha ince duvarlıdır çünkü kan sadece akciğerlere gider.',
-        fact: '<strong>💡 Biliyor muydun?</strong> Sağ ventrikül, sol ventriküle göre 6 kat daha az basınçla çalışır. Akciğerler yakın olduğu için fazla güce ihtiyaç duymaz!'
-      },
-      sol_ventrikul: {
-        icon: '🟣',
-        title: 'Sol Ventrikül',
-        tag: 'Alt Sol Odacık',
-        tagColor: '#a855f7',
-        stats: [
-          { val: '120 mL', lbl: 'Hacim' },
-          { val: '120 mmHg', lbl: 'Basınç' },
-          { val: '12-15 mm', lbl: 'Duvar Kalınlığı' }
-        ],
-        desc: 'Sol ventrikül, kalbin en güçlü odacığıdır. Akciğerlerden gelen oksijenli kanı aort aracılığıyla tüm vücuda pompalar. Duvarları sağ ventriküle göre 3 kat daha kalındır çünkü kanı tüm vücuda ulaştırması gerekir.',
-        fact: '<strong>💡 Biliyor muydun?</strong> Sol ventrikül bir günde yaklaşık 7.500 litre kan pompalar. Bu, olimpik bir yüzme havuzunu 7 günde doldurabilecek miktardır!'
-      },
-      atriyum: {
-        icon: '🟡',
-        title: 'Atriyumlar (Kulakçıklar)',
-        tag: 'Üst Odacıklar',
-        tagColor: '#f59e0b',
-        stats: [
-          { val: '2 Adet', lbl: 'Sağ & Sol' },
-          { val: '~70 mL', lbl: 'Her Birinin Hacmi' },
-          { val: '2 mm', lbl: 'Duvar Kalınlığı' }
-        ],
-        desc: 'Atriyumlar kalbin üst odacıklarıdır. Sağ atriyum vücuttan dönen oksijensiz kanı, sol atriyum ise akciğerlerden dönen oksijenli kanı toplar. İnce duvarlıdırlar çünkü kanı sadece alt odacıklara (ventriküller) aktarırlar.',
-        fact: '<strong>💡 Biliyor muydun?</strong> "Atriyum" kelimesi Latince\'de "giriş holü" anlamına gelir. Tıpkı bir evin girişi gibi, kan buradan kalbe giriş yapar!'
-      }
-    };
+  // === Right ventricle ===
+  const rightVGeo = new THREE.SphereGeometry(0.85, 32, 32);
+  rightVGeo.scale(0.65, 0.95, 0.65);
+  const rightV = new THREE.Mesh(rightVGeo, darkMat);
+  rightV.position.set(0.35, -0.1, 0.12);
+  heartGroup.add(rightV);
 
-    function startAR() {
-      document.getElementById('instructions').classList.add('hidden');
-      document.getElementById('header').style.display = 'flex';
-      document.getElementById('ar-status').style.display = 'flex';
-      document.getElementById('ar-scene').style.display = '';
-      setTimeout(() => {
-        document.getElementById('instructions').style.display = 'none';
-      }, 600);
+  // === Left atrium ===
+  const laGeo = new THREE.SphereGeometry(0.5, 28, 28);
+  laGeo.scale(0.7, 0.55, 0.6);
+  const la = new THREE.Mesh(laGeo, bodyMat.clone());
+  la.material.color.setHex(0xa91c1c);
+  la.position.set(-0.3, 0.85, -0.05);
+  heartGroup.add(la);
+
+  // === Right atrium ===
+  const raGeo = new THREE.SphereGeometry(0.5, 28, 28);
+  raGeo.scale(0.65, 0.55, 0.6);
+  const ra = new THREE.Mesh(raGeo, darkMat.clone());
+  ra.material.color.setHex(0x6b1a1a);
+  ra.position.set(0.4, 0.8, 0.05);
+  heartGroup.add(ra);
+
+  // === Bottom apex ===
+  const apexGeo = new THREE.ConeGeometry(0.45, 0.7, 24);
+  const apex = new THREE.Mesh(apexGeo, bodyMat);
+  apex.position.set(0.08, -1.15, 0);
+  apex.rotation.z = 0.15;
+  apex.rotation.x = 0.05;
+  heartGroup.add(apex);
+
+  // === Septum groove ===
+  const septGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.8, 8);
+  const sept = new THREE.Mesh(septGeo, new THREE.MeshPhysicalMaterial({color:0x4a1010, roughness:.8}));
+  sept.position.set(0.1, -0.1, 0.55);
+  sept.rotation.z = 0.08;
+  heartGroup.add(sept);
+
+  // === AORTA — thick curved tube ===
+  const aortaCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.05, 0.8, 0),
+    new THREE.Vector3(-0.05, 1.3, 0),
+    new THREE.Vector3(0.1, 1.7, -0.1),
+    new THREE.Vector3(0.5, 1.75, -0.15),
+    new THREE.Vector3(0.8, 1.5, -0.2),
+    new THREE.Vector3(0.85, 1.1, -0.25),
+  ]);
+  const aortaGeo = new THREE.TubeGeometry(aortaCurve, 40, 0.14, 16, false);
+  const aorta = new THREE.Mesh(aortaGeo, arteryMat);
+  heartGroup.add(aorta);
+
+  // Aorta branches
+  const branches = [
+    {pts:[new THREE.Vector3(0.15,1.68,-0.1), new THREE.Vector3(0.15,2.1,-0.05)], r:0.05},
+    {pts:[new THREE.Vector3(0.35,1.75,-0.12), new THREE.Vector3(0.4,2.15,-0.08)], r:0.045},
+    {pts:[new THREE.Vector3(0.55,1.73,-0.15), new THREE.Vector3(0.65,2.05,-0.1)], r:0.04},
+  ];
+  branches.forEach(b => {
+    const c = new THREE.CatmullRomCurve3(b.pts);
+    const g = new THREE.TubeGeometry(c, 12, b.r, 8, false);
+    heartGroup.add(new THREE.Mesh(g, arteryMat));
+  });
+
+  // === PULMONARY ARTERY ===
+  const pulmCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.15, 0.75, 0.15),
+    new THREE.Vector3(-0.1, 1.15, 0.25),
+    new THREE.Vector3(-0.45, 1.4, 0.2),
+    new THREE.Vector3(-0.8, 1.35, 0.15),
+  ]);
+  const pulmGeo = new THREE.TubeGeometry(pulmCurve, 36, 0.1, 14, false);
+  const pulm = new THREE.Mesh(pulmGeo, veinMat);
+  heartGroup.add(pulm);
+
+  // Pulmonary branches
+  const pc1 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.6, 1.38, 0.18),
+    new THREE.Vector3(-0.85, 1.6, 0.1),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(pc1,10,0.05,8,false), veinMat));
+  const pc2 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.65, 1.36, 0.17),
+    new THREE.Vector3(-0.7, 1.65, 0.25),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(pc2,10,0.045,8,false), veinMat));
+
+  // === SUPERIOR VENA CAVA ===
+  const svcCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.5, 0.85, 0),
+    new THREE.Vector3(0.6, 1.3, -0.05),
+    new THREE.Vector3(0.55, 1.8, -0.1),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(svcCurve,20,0.09,12,false), veinMat.clone()));
+
+  // === INFERIOR VENA CAVA ===
+  const ivcCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.5, 0.6, 0.05),
+    new THREE.Vector3(0.6, 0.1, 0.1),
+    new THREE.Vector3(0.55, -0.4, 0.15),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(ivcCurve,20,0.08,12,false), veinMat.clone()));
+
+  // === PULMONARY VEINS (back, into left atrium) ===
+  const pvPts = [
+    [new THREE.Vector3(-0.4,0.9,-0.3), new THREE.Vector3(-0.75,1.2,-0.5)],
+    [new THREE.Vector3(-0.35,0.8,-0.35), new THREE.Vector3(-0.8,0.9,-0.6)],
+  ];
+  pvPts.forEach(pts => {
+    const c = new THREE.CatmullRomCurve3(pts);
+    const m = veinMat.clone(); m.color.setHex(0x9b59b6);
+    heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(c,10,0.045,8,false), m));
+  });
+
+  // === CORONARY ARTERIES ===
+  const cor1 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.05, 0.6, 0.55),
+    new THREE.Vector3(-0.3, 0.2, 0.6),
+    new THREE.Vector3(-0.4, -0.3, 0.5),
+    new THREE.Vector3(-0.25, -0.8, 0.35),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(cor1,30,0.028,8,false), coronaryMat));
+
+  const cor2 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.15, 0.6, 0.5),
+    new THREE.Vector3(0.4, 0.2, 0.55),
+    new THREE.Vector3(0.45, -0.3, 0.45),
+    new THREE.Vector3(0.3, -0.7, 0.3),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(cor2,30,0.025,8,false), coronaryMat));
+
+  // Small coronary branches
+  const cb1 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.25, 0.15, 0.58),
+    new THREE.Vector3(-0.5, 0, 0.5),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(cb1,8,0.015,6,false), coronaryMat));
+
+  const cb2 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.35, 0.1, 0.52),
+    new THREE.Vector3(0.55, -0.05, 0.42),
+  ]);
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(cb2,8,0.015,6,false), coronaryMat));
+
+  // === AV GROOVE (ring around middle) ===
+  const grooveCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.6, 0.45, 0.3),
+    new THREE.Vector3(-0.1, 0.5, 0.6),
+    new THREE.Vector3(0.5, 0.45, 0.45),
+    new THREE.Vector3(0.7, 0.4, 0),
+    new THREE.Vector3(0.5, 0.45, -0.4),
+    new THREE.Vector3(-0.1, 0.5, -0.5),
+    new THREE.Vector3(-0.6, 0.45, -0.2),
+    new THREE.Vector3(-0.7, 0.45, 0.1),
+    new THREE.Vector3(-0.6, 0.45, 0.3),
+  ]);
+  const grooveMat = new THREE.MeshPhysicalMaterial({color:0x5a1010, roughness:.7});
+  heartGroup.add(new THREE.Mesh(new THREE.TubeGeometry(grooveCurve,48,0.025,8,true), grooveMat));
+
+  // Position whole heart
+  heartGroup.rotation.x = -0.3;
+  heartGroup.rotation.z = 0.1;
+
+  // Simulate loading
+  simulateLoading();
+}
+
+function simulateLoading(){
+  const ld = document.getElementById('loading');
+  const pct = document.getElementById('load-pct');
+  ld.classList.add('show');
+  let p = 0;
+  const iv = setInterval(()=>{
+    p += Math.random()*18 + 5;
+    if(p>=100){
+      p=100; clearInterval(iv);
+      setTimeout(()=>{
+        ld.classList.remove('show');
+        canvas.style.display='block';
+        document.getElementById('status').style.display='flex';
+        document.getElementById('nav').style.display='flex';
+        document.getElementById('hint').style.display='flex';
+        setTimeout(()=>{document.getElementById('hint').style.display='none'},5000);
+        // Show heart immediately (no AR marker needed for 3D model)
+        heartGroup.visible = true;
+        document.getElementById('status').classList.add('ok');
+        document.getElementById('stxt').textContent='3D Model Hazır — Döndürün!';
+      },400);
     }
+    pct.textContent = Math.round(p)+'%';
+  },120);
+}
 
-    function showInfo(part) {
-      const data = heartData[part];
-      if (!data) return;
+// ========================================
+// ANIMATION
+// ========================================
+function animate(){
+  requestAnimationFrame(animate);
 
-      document.getElementById('panel-icon').textContent = data.icon;
-      document.getElementById('panel-title').textContent = data.title;
+  // Heartbeat
+  heartbeatPhase += 0.04;
+  const beat = 1 + Math.sin(heartbeatPhase)*0.015 + Math.sin(heartbeatPhase*2)*0.008;
+  if(heartGroup){
+    // Smooth rotation
+    rotX += (targetRotX - rotX)*0.08;
+    rotY += (targetRotY - rotY)*0.08;
+    zoom += (targetZoom - zoom)*0.1;
 
-      // Tag
-      const header = document.querySelector('#info-panel .panel-header h2');
-      let existingTag = header.querySelector('.tag');
-      if (existingTag) existingTag.remove();
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.style.background = data.tagColor + '33';
-      tag.style.color = data.tagColor;
-      tag.style.border = '1px solid ' + data.tagColor + '55';
-      tag.textContent = data.tag;
-      header.appendChild(tag);
+    heartGroup.rotation.x = rotX;
+    heartGroup.rotation.y = rotY;
+    heartGroup.scale.set(beat*zoom, beat*zoom, beat*zoom);
+  }
+  renderer.render(scene, camera);
+}
 
-      // İstatistikler
-      const statRow = document.getElementById('stat-row');
-      statRow.innerHTML = data.stats.map(s =>
-        '<div class="stat"><div class="val">' + s.val + '</div><div class="lbl">' + s.lbl + '</div></div>'
-      ).join('');
+// ========================================
+// TOUCH / MOUSE CONTROLS
+// ========================================
+function gDist(t){
+  const dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
 
-      document.getElementById('panel-desc').textContent = data.desc;
-      document.getElementById('panel-fact').innerHTML = data.fact;
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length===1){
+    isDragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+  }
+  if(e.touches.length===2) lastDist=gDist(e.touches);
+},{passive:true});
 
-      document.getElementById('info-panel').classList.add('active');
-      document.getElementById('nav-buttons').classList.add('hidden');
-    }
+canvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  if(e.touches.length===1 && isDragging){
+    const dx=e.touches[0].clientX-lastX, dy=e.touches[0].clientY-lastY;
+    targetRotY += dx*0.008;
+    targetRotX += dy*0.006;
+    targetRotX = Math.max(-1.5, Math.min(1.5, targetRotX));
+    lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+  }
+  if(e.touches.length===2){
+    const d=gDist(e.touches);
+    targetZoom *= d/lastDist;
+    targetZoom = Math.max(0.4, Math.min(3.5, targetZoom));
+    lastDist=d;
+  }
+},{passive:false});
 
-    function closePanel() {
-      document.getElementById('info-panel').classList.remove('active');
-      document.getElementById('nav-buttons').classList.remove('hidden');
-    }
+canvas.addEventListener('touchend', ()=>{isDragging=false});
 
-    // Marker olayları
-    window.addEventListener('load', () => {
-      const marker = document.getElementById('heart-marker');
-      const status = document.getElementById('ar-status');
-      const statusText = document.getElementById('status-text');
-      const navBtns = document.getElementById('nav-buttons');
+// Mouse
+canvas.addEventListener('mousedown', e=>{isDragging=true;lastX=e.clientX;lastY=e.clientY});
+canvas.addEventListener('mousemove', e=>{
+  if(!isDragging)return;
+  targetRotY+=(e.clientX-lastX)*0.006;
+  targetRotX+=(e.clientY-lastY)*0.005;
+  targetRotX=Math.max(-1.5,Math.min(1.5,targetRotX));
+  lastX=e.clientX;lastY=e.clientY;
+});
+canvas.addEventListener('mouseup',()=>{isDragging=false});
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  targetZoom-=e.deltaY*0.002;
+  targetZoom=Math.max(0.4,Math.min(3.5,targetZoom));
+},{passive:false});
 
-      if (marker) {
-        marker.addEventListener('markerFound', () => {
-          status.classList.add('found');
-          statusText.textContent = '✅ Kalp modeli yüklendi!';
-          navBtns.classList.remove('hidden');
-        });
+// Resize
+window.addEventListener('resize',()=>{
+  if(!camera||!renderer)return;
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
 
-        marker.addEventListener('markerLost', () => {
-          status.classList.remove('found');
-          statusText.textContent = 'Marker aranıyor...';
-          navBtns.classList.add('hidden');
-          closePanel();
-        });
-      }
-    });
-  </script>
+// ========================================
+// UI
+// ========================================
+function boot(){
+  document.getElementById('splash').classList.add('out');
+  document.getElementById('header').style.display='flex';
+  document.getElementById('ar-scene').style.display='';
+  setTimeout(()=>{document.getElementById('splash').style.display='none'},700);
+  initThree();
+}
 
+function showInfo(k){
+  const d=DATA[k]; if(!d)return;
+  document.getElementById('pi').textContent=d.i;
+  document.getElementById('pt').textContent=' '+d.t;
+  const h=document.querySelector('.pan-head h3');
+  let ot=h.querySelector('.tag'); if(ot)ot.remove();
+  const tg=document.createElement('span');
+  tg.className='tag';tg.style.cssText='background:'+d.tc+'22;color:'+d.tc+';border:1px solid '+d.tc+'44';
+  tg.textContent=d.tag;h.appendChild(tg);
+  document.getElementById('pstats').innerHTML=d.s.map(s=>'<div class="cell"><div class="v">'+s.v+'</div><div class="l">'+s.l+'</div></div>').join('');
+  document.getElementById('pdesc').textContent=d.d;
+  document.getElementById('pfact').innerHTML=d.f;
+  document.getElementById('panel').classList.add('open');
+}
+
+function closePanel(){document.getElementById('panel').classList.remove('open')}
+</script>
 </body>
 </html>
